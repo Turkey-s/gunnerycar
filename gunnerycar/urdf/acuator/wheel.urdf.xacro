@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <xacro:include filename="$(find gunnerycar)/urdf/common_inertial.xacro"/>
+    <xacro:macro name="wheel_link" params="wheel_name xyz">
+        <!--机器人${wheel_name}-->
+        <link name="${wheel_name}_link">
+            <!--外观描述-->
+            <visual>
+                <!--偏移和旋转-->
+                <origin xyz="0.0 0.0 0.0" rpy="1.57079 0.0 0.0"/>
+                <!--几何形状-->
+                <geometry>
+                    <!--正方体, 单位m-->
+                    <cylinder radius = "0.032" length = "0.04"/>
+                </geometry>
+                <!--材质-->
+                <material name="yellow">
+                    <!--颜色RGBA格式-->
+                    <color rgba="1 1 0 0.8"/>
+                </material>
+            </visual>
+
+            <collision>
+                <!--偏移和旋转-->
+                <origin xyz="0.0 0.0 0.0" rpy="1.57079 0.0 0.0"/>
+                <!--几何形状-->
+                <geometry>
+                    <!--正方体, 单位m-->
+                    <cylinder radius = "0.032" length = "0.04"/>
+                </geometry>
+                <!--材质-->
+                <material name="yellow">
+                    <!--颜色RGBA格式-->
+                    <color rgba="1 1 0 0.8"/>
+                </material>
+            </collision>
+
+            <!--惯性属性-->
+            <xacro:cylinder_inertial m="0.05" r="0.032" h="0.04"/>
+        </link>
+
+        <!--机器人关节-->
+        <joint name="${wheel_name}_joint" type="continuous">
+            <!--父链接-->
+            <parent link="base_link"/>
+            <!--子链接-->
+            <child link="${wheel_name}_link"/>
+            <!--偏移和旋转-->
+            <origin xyz="${xyz}" rpy="0.0 0.0 0.0"/>
+
+             <axis xyz="0.0 1 0.0"/>
+        </joint>
+
+        <gazebo reference="${wheel_name}_link">
+            <material>Gazebo/Yellow</material>
+            <mu>20</mu>
+            <mu2>20</mu2>
+            <kp>1000000000</kp>
+            <kd>1</kd>
+        </gazebo>
+    </xacro:macro>
+</robot>
