@@ -51,10 +51,10 @@
 
         <gazebo reference="${caster_name}_link">
             <material>Gazebo/Yellow</material>
-            <mu>0</mu>
-            <mu2>0</mu2>
-            <kp>1000000000</kp>
-            <kd>1</kd>
+            <mu1 value="0.0" />
+            <mu2 value="0.0" />
+            <kp value="1000000000.0" />
+            <kd value="1.0" />
         </gazebo>
     </xacro:macro>
 </robot>

@@ -7,9 +7,9 @@
 <xacro:include filename="$(find gunnerycar)/urdf/acuator/wheel.urdf.xacro"/>
 <xacro:include filename="$(find gunnerycar)/urdf/acuator/caster.urdf.xacro"/>
 
-<xacro:include filename="$(find gunnerycar)/urdf/plugins/gazebo_control_plugin.xacro"/>
+<!-- <xacro:include filename="$(find gunnerycar)/urdf/plugins/gazebo_control_plugin.xacro"/> -->
 <xacro:include filename="$(find gunnerycar)/urdf/plugins/gazebo_sensor_plugin.xacro"/>
-<!-- <xacro:include filename="$(find gunnerycar)/urdf/ros2_control.xacro"/> -->
+<xacro:include filename="$(find gunnerycar)/urdf/ros2_control.xacro"/>
 
 <xacro:base_link length="0.12" radius="0.1"/>
 <xacro:camera_link xyz="0.1 0.0 0.07"/>
@@ -20,7 +20,7 @@
 <xacro:caster_link caster_name = "front_caster" xyz="0.08 0 -0.076"/>
 <xacro:caster_link caster_name = "back_caster" xyz="-0.08 0 -0.076"/>
 
-<xacro:gazebo_control_plugin/>
+<!-- <xacro:gazebo_control_plugin/> -->
 <xacro:gazebo_sensor_plugin/>
-<!-- <xacro:gazebo_ros2_control_system/> -->
+<xacro:gazebo_ros2_control_system/>
 </robot>

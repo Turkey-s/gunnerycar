@@ -88,20 +88,20 @@ def generate_launch_description():
         action_robot_state_publisher,
         action_launch_gazebo,
         action_spawn_entity,
-        # action_twist_transform,
-        action_joint_state_publisher,
+        action_twist_transform,
+        # action_joint_state_publisher,
         # action_rviz2_node,
-        # launch.actions.RegisterEventHandler(
-        #     event_handler=launch.event_handlers.OnProcessExit(
-        #         target_action=action_spawn_entity,
-        #         on_exit=[action_load_joint_state_broadcaster]
-        #     )
-        # ),
+        launch.actions.RegisterEventHandler(
+            event_handler=launch.event_handlers.OnProcessExit(
+                target_action=action_spawn_entity,
+                on_exit=[action_load_joint_state_broadcaster]
+            )
+        ),
 
-        # launch.actions.RegisterEventHandler(
-        #     event_handler=launch.event_handlers.OnProcessExit(
-        #         target_action=action_load_joint_state_broadcaster,
-        #         on_exit=[action_load_diff_drive_controller]
-        #     )
-        # ),
+        launch.actions.RegisterEventHandler(
+            event_handler=launch.event_handlers.OnProcessExit(
+                target_action=action_load_joint_state_broadcaster,
+                on_exit=[action_load_diff_drive_controller]
+            )
+        ),
     ])
