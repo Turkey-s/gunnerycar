@@ -10,13 +10,13 @@ def generate_launch_description():
     
     bringup_pkg_path = get_package_share_directory('nav2_bringup')
 
-    rviz_config_path = os.path.join(bringup_pkg_path, 'config', 'nav2_default_view.rviz')
+    rviz_config_path = os.path.join(bringup_pkg_path, 'rviz', 'nav2_default_view.rviz')
 
     use_sim_time = launch.substitutions.LaunchConfiguration(
         'use_sim_time', default='true')
     
     map_yaml_path = launch.substitutions.LaunchConfiguration(
-        'map', default = os.path.join(gunnerycar_pkg_path, 'map', 'map.yaml'))
+        'map', default = os.path.join(gunnerycar_pkg_path, 'map', 'room.yaml'))
     
     nav2_param_path = launch.substitutions.LaunchConfiguration(
         'nav2_param_file', default = os.path.join(gunnerycar_pkg_path, 'config', 'nav2_params.yaml'))

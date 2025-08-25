@@ -46,4 +46,5 @@ gunnerycar_diff_drive_controller:
     enable_odom_tf: true
 
     cmd_vel_timeout: 0.5
+    use_stamped_vel: false
     use_sim_time: true

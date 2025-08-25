@@ -3,6 +3,7 @@ import launch_ros
 import os
 from ament_index_python.packages import get_package_share_directory
 import launch_ros.parameter_descriptions
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 def generate_launch_description():
     print("启动文件已加载，准备启动机器人相关节点！")
@@ -50,9 +51,8 @@ def generate_launch_description():
     # )
 
     action_launch_gazebo = launch.actions.IncludeLaunchDescription(
-        launch.launch_description_sources.PythonLaunchDescriptionSource(
-            os.path.join(get_package_share_directory('gazebo_ros'), 'launch', 'gazebo.launch.py')
-        ),
+        PythonLaunchDescriptionSource([get_package_share_directory(
+            'gazebo_ros'), '/launch', '/gazebo.launch.py']),
         launch_arguments=[('world', default_world_config_path), ('verbose', 'true')],  # 设置world文件路径和verbose模式
     )
 
@@ -88,7 +88,7 @@ def generate_launch_description():
         action_robot_state_publisher,
         action_launch_gazebo,
         action_spawn_entity,
-        action_twist_transform,
+        # action_twist_transform,
         # action_joint_state_publisher,
         # action_rviz2_node,
         launch.actions.RegisterEventHandler(
