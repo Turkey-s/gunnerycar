@@ -9,7 +9,7 @@ def generate_launch_description():
     urdf_pkg_path = get_package_share_directory('gunnerycar')
     default_urdf_path = os.path.join(urdf_pkg_path, 'urdf', 'robot.urdf.xacro')
     # default_rviz_config_path = os.path.join(urdf_pkg_path, 'config', 'default_rviz_config.rviz')
-    default_world_config_path = os.path.join(urdf_pkg_path, 'world', 'neighborhood.world')
+    default_world_config_path = os.path.join(urdf_pkg_path, 'world', 'custom_room.world')
 
     action_declare_robot_description = launch.actions.DeclareLaunchArgument(
         name='model',
@@ -35,7 +35,7 @@ def generate_launch_description():
                 ('/cmd_vel_stamped', '/cmd_vel'),
             ],
         output='screen',
-        arguments=['--ros-args', '--log-level', 'DEBUG'],
+        # arguments=['--ros-args', '--log-level', 'DEBUG'],
     )
 
     action_joint_state_publisher = launch_ros.actions.Node(

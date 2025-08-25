@@ -41,7 +41,7 @@ ament_target_dependencies(twist_transform
   geometry_msgs
 )
 
-install(DIRECTORY launch urdf config world
+install(DIRECTORY launch urdf config world map
   DESTINATION share/${PROJECT_NAME}/
 )
 
