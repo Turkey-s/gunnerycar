@@ -19,6 +19,8 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
@@ -35,10 +37,18 @@ if(BUILD_TESTING)
 endif()
 
 add_executable(twist_transform src/cmd_vel_transfrom.cpp)
+add_executable(init_pose_node src/init_pose_node.cpp)
 
 ament_target_dependencies(twist_transform
   rclcpp
   geometry_msgs
+)
+
+ament_target_dependencies(init_pose_node
+  rclcpp
+  geometry_msgs
+  tf2
+  tf2_geometry_msgs
 )
 
 install(DIRECTORY launch urdf config world map
@@ -46,6 +56,10 @@ install(DIRECTORY launch urdf config world map
 )
 
 install(TARGETS twist_transform
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(TARGETS init_pose_node
   DESTINATION lib/${PROJECT_NAME}
 )
 

@@ -46,4 +46,11 @@ def generate_launch_description():
             parameters=[{'use_sim_time': use_sim_time}],
             output='screen'
         ),
+
+        launch_ros.actions.Node(
+            package='gunnerycar',
+            executable='init_pose_node',
+            name='init_pose_node',
+            output='screen'
+        ),
     ])
