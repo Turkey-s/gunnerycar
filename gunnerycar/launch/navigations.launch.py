@@ -3,6 +3,9 @@ import launch
 import launch_ros
 from ament_index_python.packages import get_package_share_directory
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.actions import ExecuteProcess, RegisterEventHandler, EmitEvent
+from launch.event_handlers import OnProcessExit
+
 
 def generate_launch_description():
     # Get the path to the package
@@ -20,6 +23,20 @@ def generate_launch_description():
     
     nav2_param_path = launch.substitutions.LaunchConfiguration(
         'nav2_param_file', default = os.path.join(gunnerycar_pkg_path, 'config', 'nav2_params.yaml'))
+    
+    action_init_pose = launch_ros.actions.Node(
+            package='gunnerycar',
+            executable='init_pose_node',
+            name='init_pose_node',
+            output='screen'
+        )
+    
+    action_send_goal = launch_ros.actions.Node(
+            package='gunnerycar',
+            executable='init_target_node',
+            name='init_target_node',
+            output='screen'
+        )
 
     return launch.LaunchDescription([
         launch.actions.DeclareLaunchArgument(
@@ -47,10 +64,13 @@ def generate_launch_description():
             output='screen'
         ),
 
-        launch_ros.actions.Node(
-            package='gunnerycar',
-            executable='init_pose_node',
-            name='init_pose_node',
-            output='screen'
-        ),
+        action_init_pose,
+        action_send_goal,
+
+        # launch.actions.RegisterEventHandler(
+        #     event_handler=launch.event_handlers.OnExecutionComplete(
+        #         target_action=action_init_pose,
+        #         on_completion=[action_send_goal]
+        #     )
+        # ),
     ])

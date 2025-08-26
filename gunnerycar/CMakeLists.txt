@@ -21,6 +21,9 @@ find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
+find_package(rclcpp_action REQUIRED)
+find_package(nav2_msgs REQUIRED) 
+find_package(tf2_ros REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
@@ -38,6 +41,7 @@ endif()
 
 add_executable(twist_transform src/cmd_vel_transfrom.cpp)
 add_executable(init_pose_node src/init_pose_node.cpp)
+add_executable(init_target_node src/nav_to_pose.cpp)
 
 ament_target_dependencies(twist_transform
   rclcpp
@@ -51,6 +55,16 @@ ament_target_dependencies(init_pose_node
   tf2_geometry_msgs
 )
 
+ament_target_dependencies(init_target_node
+  rclcpp
+  rclcpp_action    
+  nav2_msgs        
+  geometry_msgs    
+  tf2             
+  tf2_geometry_msgs 
+  tf2_ros
+)
+
 install(DIRECTORY launch urdf config world map
   DESTINATION share/${PROJECT_NAME}/
 )
@@ -60,6 +74,10 @@ install(TARGETS twist_transform
 )
 
 install(TARGETS init_pose_node
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(TARGETS init_target_node
   DESTINATION lib/${PROJECT_NAME}
 )
 
