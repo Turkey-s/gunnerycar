@@ -9,6 +9,8 @@ class InitPoseNode : public rclcpp::Node{
 public:
     InitPoseNode() : Node("init_pose_node") {
 
+        this->declare_parameter("init_pose", std::vector<double>{0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
+
         pub_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("initialpose", 1);
 
         timer_ = this->create_wall_timer(std::chrono::seconds(1),
@@ -31,11 +33,13 @@ private:
     void SendInitPose(){
         auto msg = geometry_msgs::msg::PoseWithCovarianceStamped();
         msg.header.frame_id = "map";
-        msg.pose.pose.position.x = 0.0;
-        msg.pose.pose.position.y = 0.0;
-        msg.pose.pose.position.z = 0.0;
+
+        auto init_pose = this->get_parameter("init_pose").as_double_array();
+        msg.pose.pose.position.x = init_pose[0];
+        msg.pose.pose.position.y = init_pose[1];
+        msg.pose.pose.position.z = init_pose[2];
         tf2::Quaternion q;
-        q.setRPY(0, 0, 0);  // 滚转、俯仰、偏航角（弧度）
+        q.setRPY(init_pose[3], init_pose[4], init_pose[5]);  // 滚转、俯仰、偏航角（弧度）
         msg.pose.pose.orientation = tf2::toMsg(q);
 
         pub_->publish(msg);

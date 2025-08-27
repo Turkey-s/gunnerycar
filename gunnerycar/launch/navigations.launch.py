@@ -21,6 +21,12 @@ def generate_launch_description():
     map_yaml_path = launch.substitutions.LaunchConfiguration(
         'map', default = os.path.join(gunnerycar_pkg_path, 'map', 'room.yaml'))
     
+    init_pose_path = launch.substitutions.LaunchConfiguration(
+        'init_pose', default = os.path.join(gunnerycar_pkg_path, 'config', 'init_pose_node.yaml'))
+    
+    follow_path_path = launch.substitutions.LaunchConfiguration(
+        'waypoints', default = os.path.join(gunnerycar_pkg_path, 'config', 'follow_path_node.yaml'))
+    
     nav2_param_path = launch.substitutions.LaunchConfiguration(
         'nav2_param_file', default = os.path.join(gunnerycar_pkg_path, 'config', 'nav2_params.yaml'))
     
@@ -28,14 +34,16 @@ def generate_launch_description():
             package='gunnerycar',
             executable='init_pose_node',
             name='init_pose_node',
-            output='screen'
+            output='screen',
+            parameters = [init_pose_path],
         )
     
     action_send_goal = launch_ros.actions.Node(
             package='gunnerycar',
             executable='follow_path_node',
             name='follow_path_node',
-            output='screen'
+            output='screen',
+            parameters = [follow_path_path],
         )
 
     return launch.LaunchDescription([

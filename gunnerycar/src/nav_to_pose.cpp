@@ -13,6 +13,8 @@ public:
     using GoalHandleNavigateToPose = rclcpp_action::ClientGoalHandle<NavigateToPose>;
 
     NavToPoseNode() : Node("init_target_node"){
+        this->declare_parameter("init_pose", std::vector<double>{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0});
+
         RCLCPP_INFO(this->get_logger(), "init_target_node 节点初始化...");
         client_ = rclcpp_action::create_client<NavigateToPose>(this, "navigate_to_pose");
         tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
@@ -27,6 +29,8 @@ private:
         auto goal_msg = NavigateToPose::Goal();
         goal_msg.pose.header.frame_id = "map";
         goal_msg.pose.header.stamp = this->now();
+        
+        auto param = this->get_parameter("init_pose").as_double_array();
         goal_msg.pose.pose.position.x = 3.0;
         goal_msg.pose.pose.position.y = 3.0;
         goal_msg.pose.pose.position.z = 0.0;

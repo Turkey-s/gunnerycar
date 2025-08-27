@@ -1,7 +1,9 @@
 #include "gunnerycar_follow_path.h"
 
-FollowPath::FollowPath() : Node("gunnerycar_follow_path")
+FollowPath::FollowPath() : Node("follow_path_node")
 {
+    this->declare_parameter("waypoints", std::vector<double>{0, 0, 0, 1, 1, 1, 2, 2, 2});
+    RCLCPP_INFO(this->get_logger(), "FollowPath node is created");
     follow_path_client_ = rclcpp_action::create_client<NavigateThroughPoses>(this, "FollowWaypoints");
     timer_ = this->create_wall_timer(std::chrono::seconds(1), std::bind(&FollowPath::onTimerCallback, this));
 }
@@ -18,14 +20,15 @@ void FollowPath::onTimerCallback()
 
     if(waypoints_.empty())
     {
-        for(int x = 0; x < 3; x++)
+        auto param = this->get_parameter("waypoints").as_double_array();
+        for(int i = 0; i < int(param.size()) / 3; i++)
         {
             geometry_msgs::msg::PoseStamped pose;
             pose.header.frame_id = "map";
-            pose.pose.position.x = x;
-            pose.pose.position.y = 0;
+            pose.pose.position.x = param[i * 3 + 0];
+            pose.pose.position.y = param[i * 3 + 1];
             pose.pose.position.z = 0;
-
+            RCLCPP_INFO(this->get_logger(), "x: %f, y: %f, z: %f", pose.pose.position.x, pose.pose.position.y, pose.pose.position.z);
             waypoints_.push_back(pose);
         }
     }
