@@ -4,6 +4,7 @@ FollowPath::FollowPath() : Node("follow_path_node")
 {
     this->declare_parameter("waypoints", std::vector<double>{0, 0, 0, 1, 1, 1, 2, 2, 2});
     RCLCPP_INFO(this->get_logger(), "FollowPath node is created");
+    speak_client_ = this->create_client<gunnerycar::srv::Speak>("speak");
     follow_path_client_ = rclcpp_action::create_client<NavigateThroughPoses>(this, "FollowWaypoints");
     timer_ = this->create_wall_timer(std::chrono::seconds(1), std::bind(&FollowPath::onTimerCallback, this));
 }
@@ -13,6 +14,12 @@ void FollowPath::onTimerCallback()
     if (!follow_path_client_->wait_for_action_server())
     {
         RCLCPP_ERROR(this->get_logger(), "Action server not available");
+        return;
+    }
+
+    if(!speak_client_->wait_for_service(std::chrono::milliseconds(50)))
+    {
+        RCLCPP_ERROR(this->get_logger(), "Speak service not available");
         return;
     }
 
@@ -61,7 +68,23 @@ void FollowPath::goalResponseCallback(std::shared_future<GoalHandleNavigateThrou
 
 void FollowPath::feedbackCallback(GoalHandleNavigateThroughPoses::SharedPtr, const std::shared_ptr<const NavigateThroughPoses::Feedback> feedback)
 {
-    RCLCPP_INFO(this->get_logger(), "Received feedback: %s", feedback->current_waypoint);
+    RCLCPP_INFO(this->get_logger(), "获得信息 Received feedback: %d", feedback->current_waypoint);
+    if(feedback->current_waypoint && this->current_point != feedback->current_waypoint)
+    {
+        this->current_point = feedback->current_waypoint;
+        auto request = std::make_shared<gunnerycar::srv::Speak::Request>();
+        request->content = "到达第" + std::to_string(this->current_point) + "个点";
+        speak_client_->async_send_request(request, [](std::shared_future<std::shared_ptr<gunnerycar::srv::Speak::Response>> future){
+            auto response = future.get();
+            if (!response) {
+                RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Null response");
+            }
+            else {
+                RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Speak response: %d", response->result);
+            }
+        });
+        
+    }
 }
 
 void FollowPath::resultCallback(const GoalHandleNavigateThroughPoses::WrappedResult & result)

@@ -31,9 +31,15 @@ find_package(tf2_geometry_msgs REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(nav2_msgs REQUIRED) 
 find_package(tf2_ros REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
+
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "srv/Speak.srv"
+  DEPENDENCIES geometry_msgs
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -50,11 +56,20 @@ add_executable(twist_transform src/cmd_vel_transfrom.cpp)
 add_executable(init_pose_node src/init_pose_node.cpp)
 add_executable(init_target_node src/nav_to_pose.cpp)
 add_executable(follow_path_node src/follow_path_node.cpp)
+add_executable(speaker_service src/speaker_service.cpp)
 
 ament_target_dependencies(twist_transform
   rclcpp
   geometry_msgs
 )
+
+ament_target_dependencies(speaker_service
+  rclcpp
+  geometry_msgs
+)
+
+rosidl_target_interfaces(speaker_service
+  ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 ament_target_dependencies(init_pose_node
   rclcpp
@@ -83,6 +98,9 @@ ament_target_dependencies(gunnerycar_follow_path
   tf2_ros
 )
 
+rosidl_target_interfaces(gunnerycar_follow_path
+  ${PROJECT_NAME} "rosidl_typesupport_cpp")
+
 target_link_libraries(follow_path_node gunnerycar_follow_path)
 
 install(DIRECTORY launch urdf config world map
@@ -109,5 +127,11 @@ install(TARGETS follow_path_node
   DESTINATION lib/${PROJECT_NAME}
 )
 
+install(TARGETS speaker_service
+  DESTINATION lib/${PROJECT_NAME}
+)
 
+install(TARGETS gunnerycar_follow_path)
+
+ament_export_dependencies(rosidl_default_runtime)
 ament_package()

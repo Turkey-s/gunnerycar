@@ -2,6 +2,8 @@
 #include "nav2_msgs/action/follow_waypoints.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "gunnerycar/srv/speak.hpp"
+
 #include <vector>
 
 class FollowPath : public rclcpp::Node{
@@ -20,4 +22,6 @@ private:
     rclcpp::TimerBase::SharedPtr timer_;
     std::vector<geometry_msgs::msg::PoseStamped> waypoints_;
     bool is_send_goal_success_ = false;
+    rclcpp::Client<gunnerycar::srv::Speak>::SharedPtr speak_client_;
+    uint32_t current_point = -1;
 };

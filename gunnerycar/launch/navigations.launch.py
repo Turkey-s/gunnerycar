@@ -45,6 +45,13 @@ def generate_launch_description():
             output='screen',
             parameters = [follow_path_path],
         )
+    
+    action_speaker = launch_ros.actions.Node(
+            package='gunnerycar',
+            executable='speaker_service',
+            name='speaker_service',
+            output='screen',
+        )
 
     return launch.LaunchDescription([
         launch.actions.DeclareLaunchArgument(
@@ -74,7 +81,7 @@ def generate_launch_description():
 
         action_init_pose,
         action_send_goal,
-
+        action_speaker,
         # launch.actions.RegisterEventHandler(
         #     event_handler=launch.event_handlers.OnExecutionComplete(
         #         target_action=action_init_pose,
