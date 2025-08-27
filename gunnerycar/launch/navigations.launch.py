@@ -33,8 +33,8 @@ def generate_launch_description():
     
     action_send_goal = launch_ros.actions.Node(
             package='gunnerycar',
-            executable='init_target_node',
-            name='init_target_node',
+            executable='follow_path_node',
+            name='follow_path_node',
             output='screen'
         )
 
