@@ -19,7 +19,10 @@ include_directories(
   include
 )
 
+set(plugin_name ${PROJECT_NAME}_plugin)
+
 add_library(gunnerycar_follow_path include/gunnerycar_follow_path.h src/gunnerycar_follow_path.cpp)
+add_library(nav2_custom_planner SHARED src/nav2_custom_planner.cpp)
 
 
 # find dependencies
@@ -32,6 +35,8 @@ find_package(rclcpp_action REQUIRED)
 find_package(nav2_msgs REQUIRED) 
 find_package(tf2_ros REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
+find_package(pluginlib REQUIRED)
+find_package(nav2_core REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
@@ -67,6 +72,8 @@ ament_target_dependencies(speaker_service
   rclcpp
   geometry_msgs
 )
+
+ament_target_dependencies(nav2_custom_planner nav2_core pluginlib)
 
 rosidl_target_interfaces(speaker_service
   ${PROJECT_NAME} "rosidl_typesupport_cpp")
@@ -133,5 +140,14 @@ install(TARGETS speaker_service
 
 install(TARGETS gunnerycar_follow_path)
 
+install(TARGETS nav2_custom_planner
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
+)
+
 ament_export_dependencies(rosidl_default_runtime)
+
+pluginlib_export_plugin_description_file(nav2_core custom_planner_plugin.xml)
+
 ament_package()
