@@ -23,6 +23,7 @@ set(plugin_name ${PROJECT_NAME}_plugin)
 
 add_library(gunnerycar_follow_path include/gunnerycar_follow_path.h src/gunnerycar_follow_path.cpp)
 add_library(nav2_custom_planner SHARED src/nav2_custom_planner.cpp)
+add_library(nav2_custom_controller SHARED src/nav2_custom_controller.cpp)
 
 
 # find dependencies
@@ -74,6 +75,7 @@ ament_target_dependencies(speaker_service
 )
 
 ament_target_dependencies(nav2_custom_planner nav2_core pluginlib)
+ament_target_dependencies(nav2_custom_controller nav2_core pluginlib)
 
 rosidl_target_interfaces(speaker_service
   ${PROJECT_NAME} "rosidl_typesupport_cpp")
@@ -146,8 +148,16 @@ install(TARGETS nav2_custom_planner
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
+install(TARGETS nav2_custom_controller
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
+)
+
 ament_export_dependencies(rosidl_default_runtime)
 
 pluginlib_export_plugin_description_file(nav2_core custom_planner_plugin.xml)
+pluginlib_export_plugin_description_file(nav2_core custom_planner_controller.xml)
+
 
 ament_package()
