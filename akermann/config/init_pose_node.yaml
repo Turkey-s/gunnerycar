@@ -1,0 +1,10 @@
+/init_pose_node:
+  ros__parameters:
+    init_pose:
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    use_sim_time: false

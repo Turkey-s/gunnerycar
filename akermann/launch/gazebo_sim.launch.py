@@ -7,9 +7,9 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 def generate_launch_description():
     print("启动文件已加载，准备启动机器人相关节点！")
-    urdf_pkg_path = get_package_share_directory('gunnerycar')
+    urdf_pkg_path = get_package_share_directory('ackermann')
     default_urdf_path = os.path.join(urdf_pkg_path, 'urdf', 'robot.urdf.xacro')
-    default_rviz_config_path = os.path.join(urdf_pkg_path, 'config', 'default_rviz_config.rviz')
+    # default_rviz_config_path = os.path.join(urdf_pkg_path, 'config', 'default_rviz_config.rviz')
     default_world_config_path = os.path.join(urdf_pkg_path, 'world', 'custom_room.world')
 
     action_declare_robot_description = launch.actions.DeclareLaunchArgument(
@@ -28,21 +28,31 @@ def generate_launch_description():
         parameters=[{'robot_description': value}],
     )
 
-    action_joint_state_publisher = launch_ros.actions.Node(
-        package='joint_state_publisher',
-        executable='joint_state_publisher', # 这是传参给joint_state_publisher的可执行文件
-    )
-
-    action_rviz2_node = launch_ros.actions.Node(
-        package='rviz2',
-        executable='rviz2',
-        arguments=['-d', default_rviz_config_path], # 相当于命令行参数 -d
-    )
+    # action_rviz2_node = launch_ros.actions.Node(
+    #     package='rviz2',
+    #     executable='rviz2',
+    #     arguments=['-d', default_rviz_config_path], # 相当于命令行参数 -d
+    # )
 
     action_launch_gazebo = launch.actions.IncludeLaunchDescription(
         PythonLaunchDescriptionSource([get_package_share_directory(
             'gazebo_ros'), '/launch', '/gazebo.launch.py']),
         launch_arguments=[('world', default_world_config_path), ('verbose', 'true')],  # 设置world文件路径和verbose模式
+    )
+
+    action_load_joint_state_broadcaster = launch.actions.ExecuteProcess(
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start', 'gunnerycar_joint_state_broadcaster'],
+        output='screen',
+    )
+
+    action_load_effort_state_broadcaster = launch.actions.ExecuteProcess(
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start', 'gunnerycar_effort_controller'],
+        output='screen',
+    )
+
+    action_load_diff_drive_controller = launch.actions.ExecuteProcess(
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start', 'gunnerycar_diff_drive_controller'],
+        output='screen',
     )
 
     action_spawn_entity = launch_ros.actions.Node(
@@ -60,8 +70,22 @@ def generate_launch_description():
     return launch.LaunchDescription([
         action_declare_robot_description,
         action_robot_state_publisher,
-        action_joint_state_publisher,
-        action_rviz2_node,
         action_launch_gazebo,
         action_spawn_entity,
+        # action_twist_transform,
+        # action_joint_state_publisher,
+        # action_rviz2_node,
+        launch.actions.RegisterEventHandler(
+            event_handler=launch.event_handlers.OnProcessExit(
+                target_action=action_spawn_entity,
+                on_exit=[action_load_joint_state_broadcaster]
+            )
+        ),
+
+        launch.actions.RegisterEventHandler(
+            event_handler=launch.event_handlers.OnProcessExit(
+                target_action=action_load_joint_state_broadcaster,
+                on_exit=[action_load_diff_drive_controller]
+            )
+        ),
     ])

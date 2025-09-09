@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <xacro:include filename="$(find ackermann)/urdf/common_inertial.xacro"/>
+    <xacro:macro name="front_wheel_link" params="front_wheel_name wheel_radius xyz">
+        <!--机器人${front_wheel_name}-->
+        <link name="${front_wheel_name}_link">
+            <!--外观描述-->
+            <visual>
+                <!--偏移和旋转-->
+                <origin xyz="0.0 0.0 0.0" rpy="1.57079 0.0 0.0"/>
+                <!--几何形状-->
+                <geometry>
+                    <!--正方体, 单位m-->
+                    <cylinder radius = "${wheel_radius}" length = "0.04"/>
+                </geometry>
+                <!--材质-->
+                <material name="yellow">
+                    <!--颜色RGBA格式-->
+                    <color rgba="1 1 0 0.8"/>
+                </material>
+            </visual>
+
+            <collision>
+                <!--偏移和旋转-->
+                <origin xyz="0.0 0.0 0.0" rpy="1.57079 0.0 0.0"/>
+                <!--几何形状-->
+                <geometry>
+                    <!--正方体, 单位m-->
+                    <cylinder radius = "${wheel_radius}" length = "0.04"/>
+                </geometry>
+                <!--材质-->
+                <material name="yellow">
+                    <!--颜色RGBA格式-->
+                    <color rgba="1 1 0 0.8"/>
+                </material>
+            </collision>
+
+            <!--惯性属性-->
+            <xacro:cylinder_inertial m="0.05" r="${wheel_radius}" h="0.04"/>
+        </link>
+
+        <link name="${front_wheel_name}_steer_link">
+            <xacro:cylinder_inertial m="0.05" r="${wheel_radius}" h="0.04"/>
+        </link>
+
+        <joint name="${front_wheel_name}_steer_joint" type="revolute">
+            <parent link="base_link"/>
+            <child link="${front_wheel_name}_steer_link"/>
+            <origin rpy="0 0 0" xyz="${xyz}"/>
+            <axis xyz="0 0 1"/>
+            <limit
+            lower="-0.72"
+            upper="0.72"
+            effort="0"
+            velocity="0" />
+        </joint>
+
+        <!--机器人关节-->
+        <joint name="${front_wheel_name}_joint" type="continuous">
+            <!--父链接-->
+            <parent link="${front_wheel_name}_steer_link"/>
+            <!--子链接-->
+            <child link="${front_wheel_name}_link"/>
+            <!--偏移和旋转-->
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+
+             <axis xyz="0.0 1 0.0"/>
+        </joint>
+
+        <gazebo reference="${front_wheel_name}_link">
+            <material>Gazebo/Yellow</material>
+            <mu1 value="1.2" />
+            <mu2 value="0.9" />
+            <kp value="1000000000.0" />
+            <kd value="1.0" />
+        </gazebo>
+    </xacro:macro>
+</robot>
