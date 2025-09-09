@@ -1,34 +1,27 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name = "robot_name">
-<!-- <xacro:include filename="$(find ackermann)/urdf/sensor/camera.urdf.xacro"/>
-<xacro:include filename="$(find ackermann)/urdf/sensor/imu.urdf.xacro"/>
-<xacro:include filename="$(find ackermann)/urdf/sensor/laser.urdf.xacro"/> -->
+<!-- <xacro:include filename="$(find ackermann)/urdf/sensor/camera.urdf.xacro"/> -->
+<!-- <xacro:include filename="$(find ackermann)/urdf/sensor/imu.urdf.xacro"/> -->
+<xacro:include filename="$(find ackermann)/urdf/sensor/laser.urdf.xacro"/>
 <xacro:include filename="$(find ackermann)/urdf/base.urdf.xacro"/>
 <xacro:include filename="$(find ackermann)/urdf/acuator/front_wheel.urdf.xacro"/>
 <xacro:include filename="$(find ackermann)/urdf/acuator/rear_wheel.urdf.xacro"/>
 <!-- <xacro:include filename="$(find ackermann)/urdf/acuator/caster.urdf.xacro"/> -->
 
 <xacro:include filename="$(find ackermann)/urdf/plugins/gazebo_control_plugin.xacro"/>
-<!-- <xacro:include filename="$(find ackermann)/urdf/plugins/gazebo_sensor_plugin.xacro"/> -->
+<xacro:include filename="$(find ackermann)/urdf/plugins/gazebo_sensor_plugin.xacro"/>
 <!-- <xacro:include filename="$(find ackermann)/urdf/ros2_control.xacro"/> -->
 
-<xacro:base_link length = "0.28" width = "0.184" height = "0.12" wheel_radius = "0.032"/>
-<!-- <xacro:camera_link xyz="0.1 0.0 0.07"/>
-<xacro:imu_link xyz="0.0 0.0 0.02"/>
-<xacro:laser_link xyz="0.0 0.0 0.11"/> -->
-<xacro:rear_wheel_link rear_wheel_name = "rear_left_wheel" wheel_radius = "0.032" xyz="-0.108 0.092 -0.06"/>
-<xacro:rear_wheel_link rear_wheel_name = "rear_right_wheel" wheel_radius = "0.032" xyz="-0.108 -0.092 -0.06"/>
-<xacro:front_wheel_link front_wheel_name = "front_left_wheel" wheel_radius = "0.032" xyz="0.108 0.092 -0.06"/>
-<xacro:front_wheel_link front_wheel_name = "front_right_wheel" wheel_radius = "0.032" xyz="0.108 -0.092 -0.06"/>
+<xacro:base_link length = "0.75" width = "0.3" height = "0.1" wheel_radius = "0.14"/>
+<!-- <xacro:camera_link xyz="0.1 0.0 0.07"/> -->
+<!-- <xacro:imu_link xyz="0.0 0.0 0.02"/> -->
+<xacro:laser_link xyz="0.0 0.0 0.11"/>
+<xacro:rear_wheel_link rear_wheel_name = "rear_left_wheel" wheel_radius = "0.14" xyz="-0.34058 0.24619 -0.1535"/>
+<xacro:rear_wheel_link rear_wheel_name = "rear_right_wheel" wheel_radius = "0.14" xyz="-0.34058 -0.24619 -0.1535"/>
+<xacro:front_wheel_link front_wheel_name = "front_left_wheel" wheel_radius = "0.14" xyz="0.34058 0.24619 -0.1535"/>
+<xacro:front_wheel_link front_wheel_name = "front_right_wheel" wheel_radius = "0.14" xyz="0.34058 -0.24619 -0.1535"/>
 
 <xacro:gazebo_control_plugin/>
-
-<gazebo>
-    <plugin name="gazebo_ros_joint_pose_trajectory"
-        filename="libgazebo_ros_joint_pose_trajectory.so">
-        <update_rate>2</update_rate>
-    </plugin>
-</gazebo>
-<!-- <xacro:gazebo_sensor_plugin/>
-<xacro:gazebo_ros2_control_system/> -->
+<xacro:gazebo_sensor_plugin/>
+<!-- <xacro:gazebo_ros2_control_system/> -->
 </robot>

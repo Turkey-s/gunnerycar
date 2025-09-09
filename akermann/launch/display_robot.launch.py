@@ -46,7 +46,7 @@ def generate_launch_description():
         package='gazebo_ros',
         executable='spawn_entity.py',
         arguments=[
-            '-entity', 'gunnerycar',
+            '-entity', 'ackermann',
             '-topic', 'robot_description',
             '-x', '0.0',  # 设置初始位置x坐标
             '-y', '0.0',  # 设置初始位置y坐标
@@ -62,9 +62,9 @@ def generate_launch_description():
 
     return launch.LaunchDescription([
         action_declare_robot_description,
-        action_robot_state_publisher,
-        action_joint_state_publisher,
+        # action_joint_state_publisher,
         action_launch_gazebo,
         action_spawn_entity,
+        action_robot_state_publisher,
         action_rviz2_node,
     ])

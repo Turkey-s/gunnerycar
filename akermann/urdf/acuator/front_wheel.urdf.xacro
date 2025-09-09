@@ -11,7 +11,7 @@
                 <!--几何形状-->
                 <geometry>
                     <!--正方体, 单位m-->
-                    <cylinder radius = "${wheel_radius}" length = "0.04"/>
+                    <cylinder radius = "${wheel_radius}" length = "0.14"/>
                 </geometry>
                 <!--材质-->
                 <material name="yellow">
@@ -26,7 +26,7 @@
                 <!--几何形状-->
                 <geometry>
                     <!--正方体, 单位m-->
-                    <cylinder radius = "${wheel_radius}" length = "0.04"/>
+                    <cylinder radius = "${wheel_radius}" length = "0.14"/>
                 </geometry>
                 <!--材质-->
                 <material name="yellow">
@@ -36,11 +36,11 @@
             </collision>
 
             <!--惯性属性-->
-            <xacro:cylinder_inertial m="0.05" r="${wheel_radius}" h="0.04"/>
+            <xacro:cylinder_inertial m="3.0" r="${wheel_radius}" h="0.14"/>
         </link>
 
         <link name="${front_wheel_name}_steer_link">
-            <xacro:cylinder_inertial m="0.05" r="${wheel_radius}" h="0.04"/>
+            <xacro:cylinder_inertial m="0.01" r="${wheel_radius}" h="0.14"/>
         </link>
 
         <joint name="${front_wheel_name}_steer_joint" type="revolute">
@@ -51,8 +51,8 @@
             <limit
             lower="-0.72"
             upper="0.72"
-            effort="0"
-            velocity="0" />
+            effort="5.0"
+            velocity="5.0" />
         </joint>
 
         <!--机器人关节-->
@@ -69,8 +69,8 @@
 
         <gazebo reference="${front_wheel_name}_link">
             <material>Gazebo/Yellow</material>
-            <mu1 value="1.2" />
-            <mu2 value="0.9" />
+            <mu1 value="150.0" />
+            <mu2 value="10.0" />
             <kp value="1000000000.0" />
             <kd value="1.0" />
         </gazebo>

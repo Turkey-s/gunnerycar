@@ -36,7 +36,7 @@
             </collision>
 
             <!--惯性属性-->
-            <xacro:box_inertial m="1.0" w="${width}" d="${length}" h="${height}"/>
+            <xacro:box_inertial m="25.0" w="${width}" d="${length}" h="${height}"/>
         </link>
 
         <link name="base_footprint" />
@@ -73,6 +73,10 @@
             <axis xyz="-1 0 0" />
             <limit lower="-3" upper="3" effort="200" velocity="20" />
         </joint>
+
+        <gazebo reference="virtual_steer_link">
+            <material>Gazebo/Yellow</material>
+        </gazebo>
 
     </xacro:macro>
 </robot>
