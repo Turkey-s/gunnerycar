@@ -71,7 +71,7 @@
             <parent link="base_link" />
             <child link="virtual_steer_link" />
             <axis xyz="-1 0 0" />
-            <limit lower="-3" upper="3" effort="200" velocity="20" />
+            <limit lower="-3.14159" upper="3.14159" effort="200" velocity="20" />
         </joint>
 
         <gazebo reference="virtual_steer_link">

@@ -28,13 +28,13 @@ def generate_launch_description():
         parameters=[{'robot_description': value, 'use_sim_time': True}],
     )
 
-    action_joint_state_publisher = launch_ros.actions.Node(
-        package='joint_state_publisher',
-        executable='joint_state_publisher', # 这是传参给joint_state_publisher的可执行文件
-        parameters=[{
-            'use_sim_time': True
-        }]
-    )
+    # action_joint_state_publisher = launch_ros.actions.Node(
+    #     package='joint_state_publisher',
+    #     executable='joint_state_publisher', # 这是传参给joint_state_publisher的可执行文件
+    #     parameters=[{
+    #         'use_sim_time': True
+    #     }]
+    # )
 
     action_rviz2_node = launch_ros.actions.Node(
         package='rviz2',
