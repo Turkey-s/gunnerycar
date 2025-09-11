@@ -10,7 +10,7 @@ def generate_launch_description():
     urdf_pkg_path = get_package_share_directory('ackermann')
     default_urdf_path = os.path.join(urdf_pkg_path, 'urdf', 'robot.urdf.xacro')
     default_rviz_config_path = os.path.join(urdf_pkg_path, 'config', 'dispaly_model.rviz')
-    default_world_config_path = os.path.join(urdf_pkg_path, 'world', 'custom_room.world')
+    default_world_config_path = os.path.join(urdf_pkg_path, 'world', 'simple_world.world')
     
     action_declare_robot_description = launch.actions.DeclareLaunchArgument(
         name='model',
@@ -48,8 +48,8 @@ def generate_launch_description():
         arguments=[
             '-entity', 'ackermann',
             '-topic', 'robot_description',
-            '-x', '0.0',  # 设置初始位置x坐标
-            '-y', '0.0',  # 设置初始位置y坐标
+            '-x', '-10.0',  # 设置初始位置x坐标
+            '-y', '-5.5',  # 设置初始位置y坐标
             '-z', '0.1'   # 设置初始位置z坐标
         ],
     )
@@ -66,5 +66,5 @@ def generate_launch_description():
         action_launch_gazebo,
         action_spawn_entity,
         action_robot_state_publisher,
-        action_rviz2_node,
+        # action_rviz2_node,
     ])

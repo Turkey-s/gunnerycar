@@ -9,7 +9,7 @@ from launch.event_handlers import OnProcessExit
 
 def generate_launch_description():
     # Get the path to the package
-    gunnerycar_pkg_path = get_package_share_directory('gunnerycar')
+    gunnerycar_pkg_path = get_package_share_directory('ackermann')
     
     bringup_pkg_path = get_package_share_directory('nav2_bringup')
 
@@ -19,7 +19,7 @@ def generate_launch_description():
         'use_sim_time', default='true')
     
     map_yaml_path = launch.substitutions.LaunchConfiguration(
-        'map', default = os.path.join(gunnerycar_pkg_path, 'map', 'room.yaml'))
+        'map', default = os.path.join(gunnerycar_pkg_path, 'map', 'simple_room.yaml'))
     
     init_pose_path = launch.substitutions.LaunchConfiguration(
         'init_pose', default = os.path.join(gunnerycar_pkg_path, 'config', 'init_pose_node.yaml'))
@@ -80,8 +80,8 @@ def generate_launch_description():
         ),
 
         action_init_pose,
-        action_send_goal,
-        action_speaker,
+        # action_send_goal,
+        # action_speaker,
         # launch.actions.RegisterEventHandler(
         #     event_handler=launch.event_handlers.OnExecutionComplete(
         #         target_action=action_init_pose,
