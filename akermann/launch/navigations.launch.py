@@ -40,8 +40,8 @@ def generate_launch_description():
     action_send_goal = launch_ros.actions.Node(
             namespace='robot1',  # 这里加命名空间
             package='ackermann',
-            executable='send_goal_node',
-            name='send_goal_node',
+            executable='init_target_node',
+            name='init_target_node',
             output='screen',
             parameters = [init_pose_path],
         )
@@ -70,7 +70,7 @@ def generate_launch_description():
             package='rviz2',
             executable='rviz2',
             name='rviz2',
-            arguments=['-d', rviz_config_path],
+            arguments=['-d', rviz_config_path, '--ros-args', '--log-level', 'WARN'],
             parameters=[{'use_sim_time': use_sim_time}],
             output='screen'
         ),

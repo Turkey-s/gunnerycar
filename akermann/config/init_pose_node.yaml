@@ -1,9 +1,9 @@
 /robot1/init_pose_node:
   ros__parameters:
     init_pose:
-    - 0.0
-    - 0.0
-    - 0.0
+    - 0.01
+    - 0.01
+    - 0.01
     - 0.0
     - 0.0
     - 0.0
@@ -11,7 +11,7 @@
 
 /robot1/init_target_node:
   ros__parameters:
-    init_target:
+    init_target_pose:
     - 17.5
     - 4.0
     - 0.0

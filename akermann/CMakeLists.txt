@@ -43,7 +43,7 @@ if(BUILD_TESTING)
 endif()
 
 add_executable(init_pose_node src/init_pose_node.cpp)
-add_executable(send_goal_node src/nav_to_pose.cpp)
+add_executable(init_target_node src/nav_to_pose.cpp)
 
 ament_target_dependencies(init_pose_node
   rclcpp
@@ -52,7 +52,7 @@ ament_target_dependencies(init_pose_node
   tf2_geometry_msgs
 )
 
-ament_target_dependencies(send_goal_node
+ament_target_dependencies(init_target_node
   rclcpp
   rclcpp_action    
   nav2_msgs        
@@ -70,7 +70,7 @@ install(TARGETS init_pose_node
   DESTINATION lib/${PROJECT_NAME}
 )
 
-install(TARGETS send_goal_node
+install(TARGETS init_target_node
   DESTINATION lib/${PROJECT_NAME}
 )
 

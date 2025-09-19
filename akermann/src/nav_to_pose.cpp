@@ -16,7 +16,7 @@ public:
         this->declare_parameter("init_target_pose", std::vector<double>{10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0});
 
         RCLCPP_INFO(this->get_logger(), "init_target_node 节点初始化...");
-        client_ = rclcpp_action::create_client<NavigateToPose>(this, "/robot1/navigate_to_pose");
+        client_ = rclcpp_action::create_client<NavigateToPose>(this, "navigate_to_pose");
         tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
         tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
         timer_ = this->create_wall_timer(std::chrono::seconds(1),std::bind(&NavToPoseNode::check_prepare, this));
@@ -100,8 +100,8 @@ private:
 
     void feedback_callback(GoalHandleNavigateToPose::SharedPtr, const std::shared_ptr<const NavigateToPose::Feedback> feedback)
     {
-        RCLCPP_INFO(this->get_logger(), "收到反馈: 距离目标还有 %.2f 米", 
-                   feedback->distance_remaining);
+        // RCLCPP_INFO(this->get_logger(), "收到反馈: 距离目标还有 %.2f 米", 
+        //            feedback->distance_remaining);
     }
 
     void result_callback(const GoalHandleNavigateToPose::WrappedResult & result)
