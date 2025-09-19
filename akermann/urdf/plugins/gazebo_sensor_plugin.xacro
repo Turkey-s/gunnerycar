@@ -1,15 +1,15 @@
 <?xml version = "1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-    <xacro:macro name="gazebo_sensor_plugin">
-        <gazebo reference = "laser_link">
+    <xacro:macro name="gazebo_sensor_plugin" params="robot_name">
+        <gazebo reference = "${robot_name}_laser_link">
             <sensor name = "laserscan" type = "ray">
                 <plugin name = "laserscan" filename = "libgazebo_ros_ray_sensor.so">
                     <ros>
-                        <namespace>/</namespace>
+                        <namespace>${robot_name}</namespace>
                         <remapping>~/out:=scan</remapping>
                     </ros>
                     <output_type>sensor_msgs/LaserScan</output_type>
-                    <frameName>laser_link</frameName>
+                    <frameName>${robot_name}_laser_link</frameName>
                 </plugin>
                 <always_on>true</always_on>
                 <visualize>true</visualize>
@@ -39,11 +39,11 @@
         </gazebo>
 
 
-        <gazebo reference="imu_link">
+        <gazebo reference="${robot_name}_imu_link">
             <sensor name="imu_sensor" type="imu">
                 <plugin filename="libgazebo_ros_imu_sensor.so" name="imu_plugin">
                     <ros>
-                        <namespace>/</namespace>
+                        <namespace>${robot_name}</namespace>
                         <remapping>~/out:=imu</remapping>
                     </ros>
                     <initial_orientation_as_reference>false</initial_orientation_as_reference>

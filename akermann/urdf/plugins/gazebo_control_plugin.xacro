@@ -1,23 +1,33 @@
 <?xml version = "1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-    <xacro:macro name="gazebo_control_plugin">
+    <xacro:macro name="gazebo_control_plugin" params="robot_name">
         <gazebo>
             <plugin name="gazebo_ros_joint_state_publisher"
                 filename="libgazebo_ros_joint_state_publisher.so">
+
+                <ros>
+                    <namespace>${robot_name}</namespace>
+                </ros>
+
                 <update_rate>30.0</update_rate>
-                <joint_name>front_left_wheel_joint</joint_name>
-                <joint_name>front_right_wheel_joint</joint_name>
-                <joint_name>rear_left_wheel_joint</joint_name>
-                <joint_name>rear_right_wheel_joint</joint_name>
-                <joint_name>front_left_wheel_steer_joint</joint_name>
-                <joint_name>front_right_wheel_steer_joint</joint_name>
-                <joint_name>virtual_steering_wheel_joint</joint_name>
+                <joint_name>${robot_name}_front_left_wheel_joint</joint_name>
+                <joint_name>${robot_name}_front_right_wheel_joint</joint_name>
+                <joint_name>${robot_name}_rear_left_wheel_joint</joint_name>
+                <joint_name>${robot_name}_rear_right_wheel_joint</joint_name>
+                <joint_name>${robot_name}_front_left_wheel_steer_joint</joint_name>
+                <joint_name>${robot_name}_front_right_wheel_steer_joint</joint_name>
+                <joint_name>${robot_name}_virtual_steering_wheel_joint</joint_name>
             </plugin>
         </gazebo>
 
         <gazebo>
             <plugin name="gazebo_ros_joint_pose_trajectory"
                 filename="libgazebo_ros_joint_pose_trajectory.so">
+
+                <ros>
+                    <namespace>${robot_name}</namespace>
+                </ros>
+
                 <update_rate>2</update_rate>
             </plugin>
         </gazebo>
@@ -26,7 +36,7 @@
             <plugin name="gazebo_ros_ackermann_drive" filename="libgazebo_ros_ackermann_drive.so">
 
                 <ros>
-                    <!-- <namespace>/</namespace> -->
+                    <namespace>${robot_name}</namespace>
                     <remapping>cmd_vel:=cmd_vel</remapping>
                     <remapping>odom:=odom</remapping>
                     <remapping>distance:=distance</remapping>
@@ -35,13 +45,13 @@
                 <update_rate>30.0</update_rate>
 
                 <!-- wheels -->
-                <front_left_joint>front_left_wheel_joint</front_left_joint>
-                <front_right_joint>front_right_wheel_joint</front_right_joint>
-                <rear_left_joint>rear_left_wheel_joint</rear_left_joint>
-                <rear_right_joint>rear_right_wheel_joint</rear_right_joint>
-                <left_steering_joint>front_left_wheel_steer_joint</left_steering_joint>
-                <right_steering_joint>front_right_wheel_steer_joint</right_steering_joint>
-                <steering_wheel_joint>virtual_steering_wheel_joint</steering_wheel_joint>
+                <front_left_joint>${robot_name}_front_left_wheel_joint</front_left_joint>
+                <front_right_joint>${robot_name}_front_right_wheel_joint</front_right_joint>
+                <rear_left_joint>${robot_name}_rear_left_wheel_joint</rear_left_joint>
+                <rear_right_joint>${robot_name}_rear_right_wheel_joint</rear_right_joint>
+                <left_steering_joint>${robot_name}_front_left_wheel_steer_joint</left_steering_joint>
+                <right_steering_joint>${robot_name}_front_right_wheel_steer_joint</right_steering_joint>
+                <steering_wheel_joint>${robot_name}_virtual_steering_wheel_joint</steering_wheel_joint>
 
                 <!-- Max absolute steer angle for tyre in radians-->
                 <!-- Any cmd_vel angular z greater than this would be capped -->
@@ -67,8 +77,8 @@
                 <publish_wheel_tf>false</publish_wheel_tf>
                 <publish_distance>true</publish_distance>
 
-                <odometry_frame>odom</odometry_frame>
-                <robot_base_frame>base_footprint</robot_base_frame>
+                <odometry_frame>${robot_name}_odom</odometry_frame>
+                <robot_base_frame>${robot_name}_base_footprint</robot_base_frame>
 
             </plugin>
         </gazebo>

@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
     <xacro:include filename="$(find ackermann)/urdf/common_inertial.xacro"/>
-    <xacro:macro name="rear_wheel_link" params="rear_wheel_name wheel_radius xyz">
+    <xacro:macro name="rear_wheel_link" params="robot_name rear_wheel_name wheel_radius xyz">
         <!--机器人${rear_wheel_name}-->
-        <link name="${rear_wheel_name}_link">
+        <link name="${robot_name}_${rear_wheel_name}_link">
             <!--外观描述-->
             <visual>
                 <!--偏移和旋转-->
@@ -40,11 +40,11 @@
         </link>
 
         <!--机器人关节-->
-        <joint name="${rear_wheel_name}_joint" type="continuous">
+        <joint name="${robot_name}_${rear_wheel_name}_joint" type="continuous">
             <!--父链接-->
-            <parent link="base_link"/>
+            <parent link="${robot_name}_base_link"/>
             <!--子链接-->
-            <child link="${rear_wheel_name}_link"/>
+            <child link="${robot_name}_${rear_wheel_name}_link"/>
             <!--偏移和旋转-->
             <origin xyz="${xyz}" rpy="0.0 0.0 0.0"/>
             <dynamics friction="0.8" damping="0.5" />
@@ -53,7 +53,7 @@
             <axis xyz="0.0 1 0.0"/>
         </joint>
 
-        <gazebo reference="${rear_wheel_name}_link">
+        <gazebo reference="${robot_name}_${rear_wheel_name}_link">
             <material>Gazebo/Yellow</material>
             <mu1 value="150.0" />
             <mu2 value="10.0" />

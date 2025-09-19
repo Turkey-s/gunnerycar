@@ -17,6 +17,16 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
+find_package(rclcpp_action REQUIRED)
+find_package(nav2_msgs REQUIRED) 
+find_package(tf2_ros REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
+find_package(pluginlib REQUIRED)
+find_package(nav2_core REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
@@ -32,8 +42,36 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
+add_executable(init_pose_node src/init_pose_node.cpp)
+add_executable(send_goal_node src/nav_to_pose.cpp)
+
+ament_target_dependencies(init_pose_node
+  rclcpp
+  geometry_msgs
+  tf2
+  tf2_geometry_msgs
+)
+
+ament_target_dependencies(send_goal_node
+  rclcpp
+  rclcpp_action    
+  nav2_msgs        
+  geometry_msgs    
+  tf2             
+  tf2_geometry_msgs 
+  tf2_ros
+)
+
 install(DIRECTORY launch urdf config world map
   DESTINATION share/${PROJECT_NAME}/
+)
+
+install(TARGETS init_pose_node
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(TARGETS send_goal_node
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 ament_package()

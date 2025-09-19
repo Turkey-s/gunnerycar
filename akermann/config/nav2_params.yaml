@@ -6,7 +6,7 @@ amcl:
     alpha3: 0.2
     alpha4: 0.2
     alpha5: 0.2
-    base_frame_id: "base_footprint"
+    base_frame_id: "robot1_base_footprint"
     beam_skip_distance: 0.5
     beam_skip_error_threshold: 0.9
     beam_skip_threshold: 0.3
@@ -20,7 +20,7 @@ amcl:
     max_beams: 60
     max_particles: 2000
     min_particles: 500
-    odom_frame_id: "odom"
+    odom_frame_id: "robot1_odom"
     pf_err: 0.05
     pf_z: 0.99
     recovery_alpha_fast: 0.0
@@ -51,8 +51,8 @@ bt_navigator:
   ros__parameters:
     use_sim_time: True
     global_frame: map
-    robot_base_frame: base_link
-    odom_topic: /odom
+    robot_base_frame: robot1_base_link
+    odom_topic: odom
     enable_groot_monitoring: True
     groot_zmq_publisher_port: 1666
     groot_zmq_server_port: 1667
@@ -96,59 +96,39 @@ controller_server:
     goal_checker_plugin: "goal_checker"
     controller_plugins: ["FollowPath"]
 
-    # Progress checker parameters
     progress_checker:
       plugin: "nav2_controller::SimpleProgressChecker"
-      required_movement_radius: 0.5
+      required_movement_radius: 1.0
       movement_time_allowance: 10.0
-    # Goal checker parameters
     goal_checker:
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.25
+      xy_goal_tolerance: 0.5
       yaw_goal_tolerance: 0.25
       stateful: True
-    # DWB parameters
     FollowPath:
-      plugin: "dwb_core::DWBLocalPlanner"
-      debug_trajectory_details: True
-      min_vel_x: 0.0
-      min_vel_y: 0.0
-      max_vel_x: 0.26
-      max_vel_y: 0.0
-      max_vel_theta: 1.0
-      min_speed_xy: 0.0
-      max_speed_xy: 0.26
-      min_speed_theta: 0.0
-      # Add high threshold velocity for turtlebot 3 issue.
-      # https://github.com/ROBOTIS-GIT/turtlebot3_simulations/issues/75
-      acc_lim_x: 2.5
-      acc_lim_y: 0.0
-      acc_lim_theta: 3.2
-      decel_lim_x: -2.5
-      decel_lim_y: 0.0
-      decel_lim_theta: -3.2
-      vx_samples: 20
-      vy_samples: 5
-      vtheta_samples: 20
-      sim_time: 1.7
-      linear_granularity: 0.05
-      angular_granularity: 0.025
-      transform_tolerance: 0.2
-      xy_goal_tolerance: 0.25
-      trans_stopped_velocity: 0.25
-      short_circuit_trajectory_evaluation: True
-      stateful: True
-      critics: ["RotateToGoal", "Oscillation", "BaseObstacle", "GoalAlign", "PathAlign", "PathDist", "GoalDist"]
-      BaseObstacle.scale: 0.02
-      PathAlign.scale: 32.0
-      PathAlign.forward_point_distance: 0.1
-      GoalAlign.scale: 24.0
-      GoalAlign.forward_point_distance: 0.1
-      PathDist.scale: 32.0
-      GoalDist.scale: 24.0
-      RotateToGoal.scale: 32.0
-      RotateToGoal.slowing_factor: 5.0
-      RotateToGoal.lookahead_time: -1.0
+      plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
+      desired_linear_vel: 0.7
+      lookahead_dist: 0.7 #关键参数
+      min_lookahead_dist: 0.4
+      max_lookahead_dist: 1.1
+      lookahead_time: 1.0
+      rotate_to_heading_angular_vel: 3.0
+      transform_tolerance: 0.1
+      use_velocity_scaled_lookahead_dist: true
+      min_approach_linear_velocity: 0.1
+      use_approach_linear_velocity_scaling: true
+      max_allowed_time_to_collision: 1.0 #TODO
+      use_regulated_linear_velocity_scaling: true
+      use_cost_regulated_linear_velocity_scaling: true
+      regulated_linear_scaling_min_radius: 1.0 # 有点像转弯半径
+      regulated_linear_scaling_min_speed: 0.1
+      use_rotate_to_heading: false
+      rotate_to_heading_min_angle: 0.785 # 没用
+      max_angular_accel: 3.2
+      goal_dist_tol: 0.25 #没用
+      cost_scaling_dist: 0.3
+      cost_scaling_gain: 1.0
+      inflation_cost_scaling_factor: 3.0
 
 controller_server_rclcpp_node:
   ros__parameters:
@@ -159,8 +139,8 @@ local_costmap:
     ros__parameters:
       update_frequency: 5.0
       publish_frequency: 2.0
-      global_frame: odom
-      robot_base_frame: base_link
+      global_frame: robot1_odom
+      robot_base_frame: robot1_base_link
       use_sim_time: True
       rolling_window: true
       width: 3
@@ -204,9 +184,9 @@ global_costmap:
       update_frequency: 1.0
       publish_frequency: 1.0
       global_frame: map
-      robot_base_frame: base_link
+      robot_base_frame: robot1_base_link
       use_sim_time: True
-      robot_radius: 0.22
+      robot_radius: 0.4
       resolution: 0.05
       track_unknown_space: true
       plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
@@ -226,7 +206,7 @@ global_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 3.0
-        inflation_radius: 0.55
+        inflation_radius: 0.7
       always_send_full_costmap: True
   global_costmap_client:
     ros__parameters:
@@ -254,19 +234,19 @@ planner_server:
     use_sim_time: True
     planner_plugins: ["GridBased"]
     GridBased:
-      plugin: "smac_planner/SmacPlanner"
-      tolerance: 0.5                    # tolerance for planning if unable to reach exact pose, in meters, for 2D node
+      plugin: "smac_planner/SmacPlanner" #TODO
+      tolerance: 1.0                    # tolerance for planning if unable to reach exact pose, in meters, for 2D node
       downsample_costmap: false         # whether or not to downsample the map
       downsampling_factor: 1            # multiplier for the resolution of the costmap layer (e.g. 2 on a 5cm costmap would be 10cm)
       allow_unknown: false              # allow traveling in unknown space
       max_iterations: -1                # maximum total iterations to search for before failing
       max_on_approach_iterations: 1000  # maximum number of iterations to attempt to reach goal once in tolerance, 2D only
       max_planning_time_ms: 2000.0      # max time in ms for planner to plan, smooth, and upsample. Will scale maximum smoothing and upsampling times based on remaining time after planning.
-      smooth_path: false                # Whether to smooth searched path
+      smooth_path: true                # Whether to smooth searched path
       motion_model_for_search: "DUBIN"  # 2D Moore, Von Neumann; SE2 Dubin, Redds-Shepp
       angle_quantization_bins: 72       # For SE2 node: Number of angle bins for search, must be 1 for 2D node (no angle search)
-      minimum_turning_radius: 0.20      # For SE2 node & smoother: minimum turning radius in m of path / vehicle
-      reverse_penalty: 2.1              # For Reeds-Shepp model: penalty to apply if motion is reversing, must be => 1
+      minimum_turning_radius: 1.0      # For SE2 node & smoother: minimum turning radius in m of path / vehicle
+      reverse_penalty: 1.5              # For Reeds-Shepp model: penalty to apply if motion is reversing, must be => 1
       change_penalty: 0.20              # For SE2 node: penalty to apply if motion is changing directions, must be >= 0
       non_straight_penalty: 1.05        # For SE2 node: penalty to apply if motion is non-straight, must be => 1
       cost_penalty: 1.3                 # For SE2 node: penalty to apply to higher cost zones
@@ -310,8 +290,8 @@ recoveries_server:
       plugin: "nav2_recoveries/BackUp"
     wait:
       plugin: "nav2_recoveries/Wait"
-    global_frame: odom
-    robot_base_frame: base_link
+    global_frame: robot1_odom
+    robot_base_frame: robot1_base_link
     transform_timeout: 0.1
     use_sim_time: true
     simulate_ahead_time: 2.0

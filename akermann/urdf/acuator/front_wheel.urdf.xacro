@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
     <xacro:include filename="$(find ackermann)/urdf/common_inertial.xacro"/>
-    <xacro:macro name="front_wheel_link" params="front_wheel_name wheel_radius xyz">
+    <xacro:macro name="front_wheel_link" params="robot_name front_wheel_name wheel_radius xyz">
         <!--机器人${front_wheel_name}-->
-        <link name="${front_wheel_name}_link">
+        <link name="${robot_name}_${front_wheel_name}_link">
             <!--外观描述-->
             <visual>
                 <!--偏移和旋转-->
@@ -39,13 +39,13 @@
             <xacro:cylinder_inertial m="3.0" r="${wheel_radius}" h="0.14"/>
         </link>
 
-        <link name="${front_wheel_name}_steer_link">
+        <link name="${robot_name}_${front_wheel_name}_steer_link">
             <xacro:cylinder_inertial m="0.01" r="${wheel_radius}" h="0.14"/>
         </link>
 
-        <joint name="${front_wheel_name}_steer_joint" type="revolute">
-            <parent link="base_link"/>
-            <child link="${front_wheel_name}_steer_link"/>
+        <joint name="${robot_name}_${front_wheel_name}_steer_joint" type="revolute">
+            <parent link="${robot_name}_base_link"/>
+            <child link="${robot_name}_${front_wheel_name}_steer_link"/>
             <origin rpy="0 0 0" xyz="${xyz}"/>
             <axis xyz="0 0 1"/>
             <dynamics damping="0.5" />
@@ -57,18 +57,18 @@
         </joint>
 
         <!--机器人关节-->
-        <joint name="${front_wheel_name}_joint" type="continuous">
+        <joint name="${robot_name}_${front_wheel_name}_joint" type="continuous">
             <!--父链接-->
-            <parent link="${front_wheel_name}_steer_link"/>
+            <parent link="${robot_name}_${front_wheel_name}_steer_link"/>
             <!--子链接-->
-            <child link="${front_wheel_name}_link"/>
+            <child link="${robot_name}_${front_wheel_name}_link"/>
             <!--偏移和旋转-->
             <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
 
             <axis xyz="0.0 1 0.0"/>
         </joint>
 
-        <gazebo reference="${front_wheel_name}_link">
+        <gazebo reference="${robot_name}_${front_wheel_name}_link">
             <material>Gazebo/Yellow</material>
             <mu1 value="150.0" />
             <mu2 value="10.0" />

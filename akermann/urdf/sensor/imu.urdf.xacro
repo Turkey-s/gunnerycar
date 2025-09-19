@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-    <xacro:macro name="imu_link" params="xyz">
+    <xacro:macro name="imu_link" params="robot_name xyz">
         <!--机器人IMU-->
-        <link name="imu_link">
+        <link name="${robot_name}_imu_link">
             <!--外观描述-->
             <visual>
                 <!--偏移和旋转-->
@@ -39,16 +39,16 @@
         </link>
 
         <!--机器人关节-->
-        <joint name="imu_joint" type="fixed">
+        <joint name="${robot_name}_imu_joint" type="fixed">
             <!--父链接-->
-            <parent link="base_link"/>
+            <parent link="${robot_name}_base_link"/>
             <!--子链接-->
-            <child link="imu_link"/>
+            <child link="${robot_name}_imu_link"/>
             <!--偏移和旋转-->
             <origin xyz="${xyz}" rpy="0.0 0.0 0.0"/>
         </joint>
 
-        <gazebo reference="imu_link">
+        <gazebo reference="${robot_name}_imu_link">
             <material>Gazebo/Black</material>
         </gazebo>
     </xacro:macro>
