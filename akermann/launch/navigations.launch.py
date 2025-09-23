@@ -14,7 +14,7 @@ def generate_launch_description():
 
     robots = ['robot1', 'robot2']  # Define multiple robot names
 
-    rviz_config_path = os.path.join(ackermann_pkg_path, 'config', 'nav2_namespaced_view.rviz')
+    rviz_config_path = os.path.join(ackermann_pkg_path, 'config', 'nav2_robot1_view.rviz')
 
     use_sim_time = launch.substitutions.LaunchConfiguration(
         'use_sim_time', default='true')
