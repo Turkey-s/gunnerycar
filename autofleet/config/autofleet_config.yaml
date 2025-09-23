@@ -1,0 +1,14 @@
+/init_target_node:
+  ros__parameters:
+    init_target_pose:
+    - 17.5
+    - 4.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 1.57
+    use_sim_time: false
+    plugins:
+    - "FormTeamState"
+    - "MoveState"
+    - "BreakTeamState"

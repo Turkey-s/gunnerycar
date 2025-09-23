@@ -1,0 +1,9 @@
+<root main_tree_to_execute="MainTree">
+    <BehaviorTree ID="MainTree">
+        <Sequence name="AutofleetControl">
+            <FormTeamState name="FormTeamState" />
+            <MoveState name="MoveState" />
+            <BreakTeamState name="BreakTeamState" />
+        </Sequence>
+    </BehaviorTree>
+</root>

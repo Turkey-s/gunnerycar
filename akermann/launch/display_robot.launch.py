@@ -9,7 +9,7 @@ from launch_ros.actions import PushRosNamespace
 
 def generate_launch_description():
     print("启动文件已加载，准备启动机器人相关节点！")
-    robots = ['robot1']  # 定义多个机器人名称
+    robots = ['robot1', 'robot2']  # 定义多个机器人名称
     robots_init_xyz = {'robot1' : ['-10.0', '-5.5', '0.1'], 'robot2' : ['-12.0', '-5.5', '0.1']}  # 定义每个机器人的初始位置
     urdf_pkg_path = get_package_share_directory('ackermann')
     default_urdf_path = os.path.join(urdf_pkg_path, 'urdf', 'robot.urdf.xacro')
