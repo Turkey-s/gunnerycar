@@ -13,6 +13,13 @@ void FormTeamState::ComputeFollowPose(){
 void FormTeamState::ComputeFollowVel(){
     
 }
+
+BT::NodeStatus FormTeamState::tick()
+{
+  // 处理当前数据
+  
+  return BT::NodeStatus::SUCCESS;
+}
     
 } // namespace autofleet
 

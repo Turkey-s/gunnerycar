@@ -605,7 +605,7 @@ unsigned int & AStarAlgorithm<NodeT>::getSizeDim3()
 template<typename NodeT>
 typename AStarAlgorithm<NodeT>::NodePtr AStarAlgorithm<NodeT>::tryAnalyticExpansion(
   const NodePtr & current_node, const NodeGetter & getter, int & analytic_iterations,
-  int & closest_distance)
+  int & closest_distance) // 返回最合适的下一个节点
 {
   if (_motion_model == MotionModel::DUBIN || _motion_model == MotionModel::REEDS_SHEPP) {
     // This must be a NodeSE2 node if we are using these motion models

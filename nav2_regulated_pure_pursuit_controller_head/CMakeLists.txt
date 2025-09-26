@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(nav2_regulated_pure_pursuit_controller)
+project(nav2_regulated_pure_pursuit_controller_head)
 
 find_package(ament_cmake REQUIRED)
 find_package(nav2_common REQUIRED)
@@ -29,10 +29,10 @@ set(dependencies
   tf2
 )
 
-set(library_name nav2_regulated_pure_pursuit_controller)
+set(library_name nav2_regulated_pure_pursuit_controller_head)
 
 add_library(${library_name} SHARED
-        src/regulated_pure_pursuit_controller.cpp)
+        src/nav2_regulated_pure_pursuit_controller_head.cpp)
 
 # prevent pluginlib from using boost
 target_compile_definitions(${library_name} PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
@@ -56,7 +56,6 @@ if(BUILD_TESTING)
   # the following line skips the linter which checks for copyrights
   set(ament_cmake_copyright_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
-  add_subdirectory(test)
 endif()
 
 ament_export_include_directories(include)
@@ -64,7 +63,7 @@ ament_export_libraries(${library_name})
 ament_export_dependencies(${dependencies})
 ament_export_definitions("PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
 
-pluginlib_export_plugin_description_file(nav2_core nav2_regulated_pure_pursuit_controller.xml)
+pluginlib_export_plugin_description_file(nav2_core nav2_regulated_pure_pursuit_controller_head.xml)
 
 ament_package()
 

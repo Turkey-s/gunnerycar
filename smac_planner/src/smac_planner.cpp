@@ -124,6 +124,10 @@ void SmacPlanner::configure(
       "valid options are MOORE, VON_NEUMANN, DUBIN, REEDS_SHEPP.",
       motion_model_for_search.c_str());
   }
+  else
+  {
+    RCLCPP_INFO(_logger, "使用全局规划运用模型: %s.", motion_model_for_search.c_str());
+  }
 
   if (max_on_approach_iterations <= 0) {
     RCLCPP_INFO(

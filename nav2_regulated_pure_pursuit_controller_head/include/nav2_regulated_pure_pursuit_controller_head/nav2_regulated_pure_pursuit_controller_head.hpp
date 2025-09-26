@@ -13,8 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NAV2_REGULATED_PURE_PURSUIT_CONTROLLER__PURE_PURSUIT_CONTROLLER_HPP_
-#define NAV2_REGULATED_PURE_PURSUIT_CONTROLLER__PURE_PURSUIT_CONTROLLER_HPP_
+#ifndef NAV2_REGULATED_PURE_PURSUIT_CONTROLLER_HEAD__PURE_PURSUIT_CONTROLLER_HPP_
+#define NAV2_REGULATED_PURE_PURSUIT_CONTROLLER_HEAD__PURE_PURSUIT_CONTROLLER_HPP_
 
 #include <string>
 #include <vector>
@@ -28,7 +28,7 @@
 #include "nav2_util/odometry_utils.hpp"
 #include "geometry_msgs/msg/pose2_d.hpp"
 
-namespace nav2_regulated_pure_pursuit_controller
+namespace nav2_regulated_pure_pursuit_controller_head
 {
 
 /**
@@ -129,7 +129,7 @@ protected:
    * @param carrot_pose Input carrot point as a PoseStamped
    * @return CarrotMsg a carrot point marker, PointStamped
    */
-  std::unique_ptr<geometry_msgs::msg::PointStamped> createCarrotMsg(
+  std::unique_ptr<geometry_msgs::msg::PoseStamped> createCarrotMsg(
     const geometry_msgs::msg::PoseStamped & carrot_pose);
 
   /**
@@ -240,7 +240,7 @@ protected:
 
   nav_msgs::msg::Path global_plan_;
   std::shared_ptr<rclcpp_lifecycle::LifecyclePublisher<nav_msgs::msg::Path>> global_path_pub_;
-  std::shared_ptr<rclcpp_lifecycle::LifecyclePublisher<geometry_msgs::msg::PointStamped>> carrot_pub_;
+  std::shared_ptr<rclcpp_lifecycle::LifecyclePublisher<geometry_msgs::msg::PoseStamped>> carrot_pub_;
   std::shared_ptr<rclcpp_lifecycle::LifecyclePublisher<nav_msgs::msg::Path>> carrot_arc_pub_;
 };
 

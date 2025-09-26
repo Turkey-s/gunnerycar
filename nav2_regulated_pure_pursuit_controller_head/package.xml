@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>nav2_regulated_pure_pursuit_controller</name>
+  <name>nav2_regulated_pure_pursuit_controller_head</name>
   <version>0.4.7</version>
   <description>Regulated Pure Pursuit Controller</description>
   <maintainer email="stevenmacenski@gmail.com">Steve Macenski</maintainer>

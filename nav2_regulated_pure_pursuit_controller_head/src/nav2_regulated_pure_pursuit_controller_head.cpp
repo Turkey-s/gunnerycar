@@ -17,7 +17,7 @@
 #include <string>
 #include <memory>
 
-#include "nav2_regulated_pure_pursuit_controller/regulated_pure_pursuit_controller.hpp"
+#include "nav2_regulated_pure_pursuit_controller_head/nav2_regulated_pure_pursuit_controller_head.hpp"
 #include "nav2_core/exceptions.hpp"
 #include "nav2_util/node_utils.hpp"
 #include "nav2_util/geometry_utils.hpp"
@@ -36,7 +36,7 @@ double clamp(double value, double min, double max) {
   return value;
 }
 
-namespace nav2_regulated_pure_pursuit_controller
+namespace nav2_regulated_pure_pursuit_controller_head
 {
 
 /**
@@ -155,7 +155,7 @@ void RegulatedPurePursuitController::configure(
   }
 
   global_path_pub_ = node->create_publisher<nav_msgs::msg::Path>("received_global_plan", 1);
-  carrot_pub_ = node->create_publisher<geometry_msgs::msg::PointStamped>("lookahead_point", 1);
+  carrot_pub_ = node->create_publisher<geometry_msgs::msg::PoseStamped>("lookahead_point", 1);
   carrot_arc_pub_ = node->create_publisher<nav_msgs::msg::Path>("lookahead_collision_arc", 1);
 }
 
@@ -195,14 +195,11 @@ void RegulatedPurePursuitController::deactivate()
   carrot_arc_pub_->on_deactivate();
 }
 
-std::unique_ptr<geometry_msgs::msg::PointStamped> RegulatedPurePursuitController::createCarrotMsg(
+std::unique_ptr<geometry_msgs::msg::PoseStamped> RegulatedPurePursuitController::createCarrotMsg(
   const geometry_msgs::msg::PoseStamped & carrot_pose)
 {
-  auto carrot_msg = std::make_unique<geometry_msgs::msg::PointStamped>();
-  carrot_msg->header = carrot_pose.header;
-  carrot_msg->point.x = carrot_pose.pose.position.x;
-  carrot_msg->point.y = carrot_pose.pose.position.y;
-  carrot_msg->point.z = 0.01;  // publish right over map to stand out
+  auto carrot_msg = std::make_unique<geometry_msgs::msg::PoseStamped>();
+  *carrot_msg = carrot_pose;
   return carrot_msg;
 }
 
@@ -229,7 +226,7 @@ geometry_msgs::msg::TwistStamped RegulatedPurePursuitController::computeVelocity
   // Find look ahead distance and point on path and publish
   const double lookahead_dist = getLookAheadDistance(speed);
   auto carrot_pose = getLookAheadPoint(lookahead_dist, transformed_plan);
-  carrot_pub_->publish(createCarrotMsg(carrot_pose));
+  carrot_pub_->publish(std::move(createCarrotMsg(carrot_pose)));
 
   double linear_vel, angular_vel;
 
@@ -555,5 +552,5 @@ bool RegulatedPurePursuitController::transformPose(
 
 // Register this controller as a nav2_core plugin
 PLUGINLIB_EXPORT_CLASS(
-  nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController,
+  nav2_regulated_pure_pursuit_controller_head::RegulatedPurePursuitController,
   nav2_core::Controller)

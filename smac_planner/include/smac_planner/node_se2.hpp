@@ -312,6 +312,7 @@ public:
    * @param width Width of costmap
    * @param angle_quantization Number of theta bins
    * @return Index
+   * 其中原理是将二维平面上的点（x, y, θ）映射到一个数中，通过计算索引来访问该点。
    */
   static inline unsigned int getIndex(
     const unsigned int & x, const unsigned int & y, const unsigned int & angle,

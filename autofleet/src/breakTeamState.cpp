@@ -13,6 +13,11 @@ void BreakTeamState::ComputeFollowPose(){
 void BreakTeamState::ComputeFollowVel(){
     
 }
+
+BT::NodeStatus BreakTeamState::tick()
+{
+    return BT::NodeStatus::SUCCESS;
+}
     
 } // namespace autofleet
 

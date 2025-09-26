@@ -15,9 +15,9 @@ void MoveState::ComputeFollowVel(){
 }
 
 //响应行为树tick
-BT::NodeStatus tick()
+BT::NodeStatus MoveState::tick()
 {
-
+  return BT::NodeStatus::SUCCESS;
 }
     
 } // namespace autofleet

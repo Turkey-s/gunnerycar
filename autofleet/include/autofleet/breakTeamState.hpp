@@ -23,6 +23,8 @@ public:
     {
         return BT::PortsList{};
     }
+
+    virtual BT::NodeStatus tick() override;
 };
 
     

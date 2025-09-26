@@ -26,6 +26,8 @@ set(dependencies
   tf2             
   tf2_geometry_msgs 
   tf2_ros
+  nav_msgs
+  std_msgs
 )
 
 foreach(package IN LISTS dependencies)
@@ -38,6 +40,11 @@ include_directories(
 )
 
 # 添加共享库文件
+add_library(autofleet_node SHARED include/autofleet/autofleet_node.hpp src/autofleet_node.cpp)
+ament_target_dependencies(autofleet_node
+  ${dependencies}
+)
+
 add_library(MoveState SHARED include/autofleet/moveState.hpp src/moveState.cpp)
 list(APPEND plugin_libs MoveState)
 add_library(FormTeamState SHARED include/autofleet/formTeamState.hpp src/formTeamState.cpp)
@@ -45,22 +52,25 @@ list(APPEND plugin_libs FormTeamState)
 add_library(BreakTeamState SHARED include/autofleet/breakTeamState.hpp src/breakTeamState.cpp)
 list(APPEND plugin_libs BreakTeamState)
 
+
+
 foreach(bt_plugin ${plugin_libs})
   ament_target_dependencies(${bt_plugin} ${dependencies})
   target_compile_definitions(${bt_plugin} PRIVATE BT_PLUGIN_EXPORT)
+  target_link_libraries(${bt_plugin}
+    autofleet_node
+  )
 endforeach()
 
 #添加执行库文件
-add_executable(autofleet_node src/autofleet_node.cpp)
+add_executable(autofleet_node_exec src/main.cpp)
 
-ament_target_dependencies(autofleet_node
-  ${dependencies}
+target_link_libraries(autofleet_node_exec
+  autofleet_node
 )
 
-target_link_libraries(autofleet_node
-  MoveState
-  FormTeamState
-  BreakTeamState
+ament_target_dependencies(autofleet_node_exec
+  ${dependencies}
 )
 
 #添加install
@@ -73,12 +83,12 @@ install(DIRECTORY include
 )
 
 #ROS2 run 是在 lib/autofleet 下找可执行文件
-install(TARGETS autofleet_node
+install(TARGETS autofleet_node_exec
   DESTINATION lib/${PROJECT_NAME}
 )
 
 #行为树在loading 插件时是在lib下找
-install(TARGETS ${plugin_libs}
+install(TARGETS ${plugin_libs} autofleet_node
   DESTINATION lib
 )
 

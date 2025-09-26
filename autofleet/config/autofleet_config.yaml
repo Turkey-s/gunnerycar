@@ -1,6 +1,6 @@
-/init_target_node:
+/autofleet_node:
   ros__parameters:
-    init_target_pose:
+    target_pose:
     - 17.5
     - 4.0
     - 0.0
@@ -12,3 +12,4 @@
     - "FormTeamState"
     - "MoveState"
     - "BreakTeamState"
+    robots_name: ["robot1"]
