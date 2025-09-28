@@ -1,7 +1,0 @@
-/follow_path_node:
-  ros__parameters:
-    use_sim_time: false
-    waypoints:
-    - 10.0
-    - 0.0
-    - 0.0

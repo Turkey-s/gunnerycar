@@ -24,6 +24,9 @@ public:
 
         };
     }
+
+private:
+    bool is_first_tick = false;
 };
 
     

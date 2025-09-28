@@ -3,15 +3,24 @@
 namespace autofleet
 {
 void MoveState::ComputeHeadVelRate(){
-     
+
 }
 
 //响应行为树tick
 BT::NodeStatus MoveState::tick()
 {
   auto node = GetNodeSharePtr();
-  node->SendGoal(); // 向头车发送目标点
-  return BT::NodeStatus::SUCCESS;
+
+  if(is_first_tick)
+    node->SendGoal(); // 向头车发送目标点
+  
+  // 观察编队状态
+
+  // 控制头车速度
+
+  // 向后车发送目标点
+  
+    return BT::NodeStatus::SUCCESS;
 }
     
 } // namespace autofleet

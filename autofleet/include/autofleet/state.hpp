@@ -7,7 +7,7 @@
 namespace autofleet
 {
 using PoseStamp = geometry_msgs::msg::PoseStamped;
-using VecPoseStamp = std::unique_ptr<std::vector<PoseStamp> >;
+using VecPoseStamp = std::shared_ptr<std::vector<PoseStamp> >;
 class State : public BT::ActionNodeBase
 {
 public:
@@ -67,6 +67,7 @@ private:
 
 public:
     std::vector<RobotInfo> robot_infos_;
+    VecPoseStamp last_follow_pose_;
 };
 
 // 依据一个目标点，以相同的航向和偏移找到下一个目标点
@@ -121,7 +122,7 @@ VecPoseStamp State::ComputeFollowPose()
         follow_pose->push_back(out_pose);
         robot_index++;
     }
-
+    last_follow_pose_ = follow_pose;
     return follow_pose;
 }
 

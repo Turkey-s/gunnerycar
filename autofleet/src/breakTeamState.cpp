@@ -5,7 +5,10 @@ namespace autofleet
 
 BT::NodeStatus BreakTeamState::tick()
 {
-    return BT::NodeStatus::SUCCESS;
+  //获得跟随车停车目标位姿
+
+  //启动跟随车
+  return BT::NodeStatus::SUCCESS;
 }
     
 } // namespace autofleet

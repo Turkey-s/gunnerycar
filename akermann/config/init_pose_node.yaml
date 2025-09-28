@@ -23,7 +23,7 @@
 /robot2/init_pose_node:
   ros__parameters:
     init_pose:
-    - -2.0
+    - 0.0
     - 0.0
     - 0.1
     - 0.0

@@ -10,13 +10,18 @@ public:
     InitPoseNode() : Node("init_pose_node") {
 
         this->declare_parameter("init_pose", std::vector<double>{0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
+        this->declare_parameter("robot_name", "robot1");
 
         pub_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("initialpose", 1);
 
+        auto robot_name = this->get_parameter("robot_name").as_string();
+
+        RCLCPP_INFO(this->get_logger(), "%s init_pose_node 启动中", robot_name.c_str());
+
         timer_ = this->create_wall_timer(std::chrono::seconds(1),
-            [&](){
+            [&, robot_name](){
                 auto node_name_list = this->get_node_graph_interface()->get_node_names();
-                std::string target_node_name = "/robot1/amcl";
+                std::string target_node_name = "/" + robot_name + "/amcl";
                 for(auto node_name : node_name_list){
                     if(node_name == target_node_name){
                         RCLCPP_INFO(this->get_logger(), "amcl node 已启动");

@@ -6,75 +6,75 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.actions import ExecuteProcess, RegisterEventHandler, EmitEvent
 from launch.event_handlers import OnProcessExit
 from launch_ros.actions import PushRosNamespace
+from launch.actions import GroupAction, DeclareLaunchArgument,OpaqueFunction
+from launch.conditions import IfCondition
+from launch.substitutions import LaunchConfiguration, PythonExpression
 
-
-def generate_launch_description():
-    # Get the path to the package
+def launch_setup(context, *args, **kwargs):
     ackermann_pkg_path = get_package_share_directory('ackermann')
+    robot_name = LaunchConfiguration('robot_name').perform(context)
 
-    robots = ['robot1', 'robot2']  # Define multiple robot names
+    rviz_config_path = os.path.join(ackermann_pkg_path, 'config', 'nav2_'+robot_name+'_view.rviz')
 
-    rviz_config_path = os.path.join(ackermann_pkg_path, 'config', 'nav2_robot1_view.rviz')
-
-    use_sim_time = launch.substitutions.LaunchConfiguration(
+    use_sim_time = LaunchConfiguration(
         'use_sim_time', default='true')
     
-    map_yaml_path = launch.substitutions.LaunchConfiguration(
+    map_yaml_path = LaunchConfiguration(
         'map', default = os.path.join(ackermann_pkg_path, 'map', 'simple_room.yaml'))
     
-    init_pose_path = launch.substitutions.LaunchConfiguration(
+    init_pose_path = LaunchConfiguration(
         'init_pose', default = os.path.join(ackermann_pkg_path, 'config', 'init_pose_node.yaml'))
     
-    nav2_param_path = launch.substitutions.LaunchConfiguration(
-        'nav2_param_file', default = os.path.join(ackermann_pkg_path, 'config', 'nav2_params.yaml'))
-    
-    action_init_pose = launch_ros.actions.Node(
-            namespace='robot1',  # 这里加命名空间
-            package='ackermann',
-            executable='init_pose_node',
-            name='init_pose_node',
-            output='screen',
-            parameters = [init_pose_path],
-        )
-    
-    action_send_goal = launch_ros.actions.Node(
-            namespace='robot1',  # 这里加命名空间
-            package='ackermann',
-            executable='init_target_node',
-            name='init_target_node',
-            output='screen',
-            parameters = [init_pose_path],
-        )
-    
+    nav2_param_path = os.path.join(ackermann_pkg_path, 'config', 'nav2_'+robot_name+'_params.yaml')
 
-    return launch.LaunchDescription([
-        launch.actions.DeclareLaunchArgument(
-        'use_sim_time',
-        default_value=use_sim_time,
-        description='Use simulation (Gazebo) clock if true'),
-        launch.actions.DeclareLaunchArgument("map", default_value= map_yaml_path, description="Full path to map file to load"),
-        launch.actions.DeclareLaunchArgument("params_file", default_value= nav2_param_path, description="Full path to the ROS2 parameters file to load"),
-        launch.actions.IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                [ackermann_pkg_path, '/launch', '/bringup_launch.py']),
+    ret = []
+    
+    ret.append(launch.actions.IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [ackermann_pkg_path, '/launch', '/bringup_launch.py']),
 
-            launch_arguments={
-                'map': map_yaml_path,
-                'use_sim_time': use_sim_time,
-                'params_file': nav2_param_path,
-                'namespace': 'robot1',
-                'use_namespace': 'true',
-            }.items(),
-        ),
-        launch_ros.actions.Node(
+        launch_arguments={
+            'map': map_yaml_path,
+            'use_sim_time': use_sim_time,
+            'params_file': nav2_param_path,
+            'namespace': robot_name,
+            'use_namespace': 'true',
+        }.items(),
+    ))
+
+    if robot_name == 'robot1':
+        ret.append(launch_ros.actions.Node(
             package='rviz2',
             executable='rviz2',
             name='rviz2',
             arguments=['-d', rviz_config_path, '--ros-args', '--log-level', 'WARN'],
             parameters=[{'use_sim_time': use_sim_time}],
-            output='screen'
-        ),
+            output='screen',
+        ))
+    
+    ret.append(launch_ros.actions.Node(
+        namespace=robot_name,  # 这里加命名空间
+        package='ackermann',
+        executable='init_pose_node',
+        name='init_pose_node',
+        output='screen',
+        parameters = [init_pose_path, {"robot_name" : robot_name}],
+    ))
+    return ret
 
-        action_init_pose,
-        action_send_goal,
+def generate_launch_description():
+    # Get the path to the package
+    ackermann_pkg_path = get_package_share_directory('ackermann')
+
+    return launch.LaunchDescription([
+        launch.actions.DeclareLaunchArgument(
+        'use_sim_time',
+        default_value= 'true',
+        description='Use simulation (Gazebo) clock if true'),
+        launch.actions.DeclareLaunchArgument("map", default_value= os.path.join(ackermann_pkg_path, 'map', 'simple_room.yaml'), description="Full path to map file to load"),
+        DeclareLaunchArgument(
+        'robot_name',
+        default_value='robot',
+        description='Top-level namespace'),
+        OpaqueFunction(function=launch_setup),
     ])
