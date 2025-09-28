@@ -2,17 +2,6 @@
 
 namespace autofleet
 {
-void BreakTeamState::ComputeHeadVel(){
-    
-}
-
-void BreakTeamState::ComputeFollowPose(){
-    
-}
-
-void BreakTeamState::ComputeFollowVel(){
-    
-}
 
 BT::NodeStatus BreakTeamState::tick()
 {

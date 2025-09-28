@@ -15,9 +15,7 @@ public:
         : State(xml_tag_name, conf){}
     virtual ~MoveState() = default;
 
-    virtual void ComputeHeadVel() override; // 计算下一次控制时头车的速度
-    virtual void ComputeFollowPose() override; // 计算下一次控制时跟随车全部路径规划的点(x,y,yaw)
-    virtual void ComputeFollowVel() override; // 计算下一次控制时到达目标点跟随车的车速
+    void ComputeHeadVelRate(); // 计算下一次控制时头车的速度
     virtual BT::NodeStatus tick() override;
 
     static BT::PortsList providedPorts()

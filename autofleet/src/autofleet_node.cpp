@@ -6,13 +6,10 @@
 #include "autofleet/formTeamState.hpp"
 #include "autofleet/moveState.hpp"
 #include "iostream"
-
-#include <fstream> // test
+#include <fstream>
 
 namespace autofleet
 {
-const float path_pose_interval = 0.3;
-const float max_turn_angle = 0.72; // 最大转弯角度，弧度值
 const float first_lookaheading_angle = 0.0;
 using namespace std::chrono_literals;
 AutofleetMgrNode::AutofleetMgrNode() : Node("autofleet_node")
@@ -22,6 +19,7 @@ AutofleetMgrNode::AutofleetMgrNode() : Node("autofleet_node")
   declare_parameter("plugins", std::vector<std::string>{"FormTeamState", "MoveState", "BreakTeamState"});
   declare_parameter("target_pose", std::vector<double>{0.0, 0.0, 0.0});
   declare_parameter("robots_name", std::vector<std::string>{"robot1", "robot2", "robot3"});
+
   // 初始化成员变量
   head_lookhead_path_ = std::make_shared<nav_msgs::msg::Path>();
   head_lookhead_path_->header.frame_id = "map";
@@ -38,8 +36,21 @@ AutofleetMgrNode::AutofleetMgrNode() : Node("autofleet_node")
   auto robots_name = this->get_parameter("robots_name").as_string_array();
   head_robot_name_ = robots_name[0];
   for (const auto & robot_name : robots_name) {
-    robots_info_.insert({robot_name, RobotInfo(robot_name)});
+    declare_parameter(robot_name, std::vector<double>{0.0, 0.0});
+    auto pose = this->get_parameter(robot_name).as_double_array();
+    robots_info_.push_back(RobotInfo(robot_name, pose)); 
   }
+
+  // 排序
+  std::sort(robots_info_.begin(), robots_info_.end(), [&](const RobotInfo & a, const RobotInfo & b) {
+    if(a.relative_pose.x < b.relative_pose.x) {
+      return true;
+    }
+    else if(a.relative_pose.x == b.relative_pose.x && a.relative_pose.y < b.relative_pose.y) {
+      return true;
+    }
+    return false;
+  });
 
   //初始化tf树
   tf_buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
@@ -81,8 +92,16 @@ nav_msgs::msg::Path::SharedPtr AutofleetMgrNode::GetHeadPath()
   return head_lookhead_path_;
 }
 
+std::vector<RobotInfo> AutofleetMgrNode::GetRobotsInfo()
+{
+  return robots_info_;
+}
+
 void AutofleetMgrNode::CreateTree()
 {
+#ifdef TESTING
+  RCLCPP_INFO(this->get_logger(), "注意Creating tree");
+#endif
   std::vector<std::string> plugin_libraries = get_parameter("plugins").as_string_array();
   BT::SharedLibrary loader;
   for (const auto & p : plugin_libraries) {
@@ -94,7 +113,7 @@ void AutofleetMgrNode::CreateTree()
   bt_xml_file = package_share_dir + "/config/" + bt_xml_file;
 
   blackboard_ = BT::Blackboard::create();
-  blackboard_->set<AutofleetMgrNode::SharedPtr>("node", shared_from_this());
+  blackboard_->set<AutofleetMgrNode::WeakPtr>("node",weak_from_this());
   
   tree_ = factory_.createTreeFromFile(bt_xml_file, blackboard_);
 }
@@ -153,14 +172,6 @@ void AutofleetMgrNode::result_callback(const GoalHandleNavigateToPose::WrappedRe
 
 void AutofleetMgrNode::lookahead_callback(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
 {
-  if(head_lookhead_path_->poses.size() > 0){
-    auto& last_pose = head_lookhead_path_->poses.back();
-    // 去除太密集的点
-    if(std::pow(last_pose.pose.position.x - msg->pose.position.x, 2) + std::pow(last_pose.pose.position.y - msg->pose.position.y, 2) < path_pose_interval * path_pose_interval){
-      return;
-    }
-  }
-
   geometry_msgs::msg::PoseStamped out_pose = *msg;
   if(msg->header.frame_id != "map"){
     try{
@@ -169,6 +180,14 @@ void AutofleetMgrNode::lookahead_callback(const geometry_msgs::msg::PoseStamped:
     }
     catch(tf2::TransformException &ex){
       RCLCPP_ERROR(this->get_logger(), "Could not transform %s to %s :...: %s", msg->header.frame_id.c_str(), "map", ex.what());
+    }
+  }
+
+  if(head_lookhead_path_->poses.size() > 0){
+    auto& last_pose = head_lookhead_path_->poses.back();
+    // 去除太密集的点
+    if(std::pow(last_pose.pose.position.x - out_pose.pose.position.x, 2) + std::pow(last_pose.pose.position.y - out_pose.pose.position.y, 2) < path_pose_interval * path_pose_interval){
+      return;
     }
   }
 
@@ -183,7 +202,6 @@ void AutofleetMgrNode::lookahead_callback(const geometry_msgs::msg::PoseStamped:
     {
       auto& last_second_pose = head_lookhead_path_->poses[head_lookhead_path_->poses.size() - 2];
       float yaw = atan2(out_pose.pose.position.y - last_second_pose.pose.position.y, out_pose.pose.position.x - last_second_pose.pose.position.x);
-      //TODO: 朝向修正
       last_pose.pose.orientation.z = yaw;
     }
   }
@@ -194,19 +212,21 @@ void AutofleetMgrNode::lookahead_callback(const geometry_msgs::msg::PoseStamped:
 
   head_lookhead_path_->poses.push_back(out_pose);
 
-  path_pub_->publish(*head_lookhead_path_);
+  tree_.tickRoot(); // 在收到头车点的目标点后，执行一次行为树
+
+  path_pub_->publish(*head_lookhead_path_); // for visualization
 }
 
 void AutofleetMgrNode::tf_timer_callback(){
   for(auto& robot : robots_info_){
-    if(robot.second.is_prepared) continue;
+    if(robot.is_prepared) continue;
 
     try{
       geometry_msgs::msg::TransformStamped transformStamped;
-      transformStamped = tf_buffer_->lookupTransform("map", robot.first + "_base_link", tf2::TimePointZero);
-      robot.second.is_prepared = true;
+      transformStamped = tf_buffer_->lookupTransform("map", robot.robot_name + "_base_link", tf2::TimePointZero);
+      robot.is_prepared = true;
     }catch(tf2::TransformException &ex){
-      RCLCPP_WARN(this->get_logger(), "Could not transform %s to %s :...: %s", "map", robot.first.c_str(), ex.what());
+      RCLCPP_WARN(this->get_logger(), "Could not transform %s to %s :...: %s", "map", robot.robot_name.c_str(), ex.what());
       return;
     }
   }
@@ -214,11 +234,40 @@ void AutofleetMgrNode::tf_timer_callback(){
   // 所有机器人已就位
   timer_->cancel();
   SendGoal();
-  tree_.tickRootWhileRunning(std::chrono::milliseconds(30));
+  // tree_.tickRootWhileRunning(std::chrono::milliseconds(30));
 }
+
 
 AutofleetMgrNode::~AutofleetMgrNode()
 {
-  
+  RCLCPP_INFO(this->get_logger(), "注意AutofleetMgrNode::~AutofleetMgrNode()");
+#ifdef TESTING
+  WriteFile();
+#endif
 }
+
+void AutofleetMgrNode::WriteFile()
+{
+  std::ofstream outFile("/home/syl/gunnerycar_ws/src/autofleet/head_lookahead_path.txt");
+
+  // 检查文件是否成功打开
+  if (!outFile.is_open()) {
+      std::cerr << "无法打开文件进行写入" << std::endl;
+      return;
+  }
+
+  // 遍历容器并将每个元素写入文件
+  for (const auto& path : head_lookhead_path_->poses) {
+      outFile << std::to_string(path.pose.position.x) + " "
+               + std::to_string(path.pose.position.y) + " "
+               + std::to_string(path.pose.orientation.z) + "\n"
+      << std::endl;
+  }
+
+  // 关闭文件流（虽然在这个例子中不是必须的，因为 outFile 会在作用域结束时自动关闭）
+  outFile.close();
+
+  std::cout << "数据已成功保存到 head_lookahead_path.txt" << std::endl;
+}
+
 }

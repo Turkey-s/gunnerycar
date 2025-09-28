@@ -2,21 +2,15 @@
 
 namespace autofleet
 {
-void MoveState::ComputeHeadVel(){
-    
-}
-
-void MoveState::ComputeFollowPose(){
-    
-}
-
-void MoveState::ComputeFollowVel(){
-    
+void MoveState::ComputeHeadVelRate(){
+     
 }
 
 //响应行为树tick
 BT::NodeStatus MoveState::tick()
 {
+  auto node = GetNodeSharePtr();
+  node->SendGoal(); // 向头车发送目标点
   return BT::NodeStatus::SUCCESS;
 }
     

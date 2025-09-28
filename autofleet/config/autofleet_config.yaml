@@ -13,3 +13,4 @@
     - "MoveState"
     - "BreakTeamState"
     robots_name: ["robot1"]
+    robot1: [0.0 ,0.0]

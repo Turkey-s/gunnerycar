@@ -8,5 +8,6 @@ int main(int argc, char **argv)
   node->Run();
   rclcpp::spin(node);
   rclcpp::shutdown();
+  std::cout << node.use_count() << std::endl;
   return 0;
 }

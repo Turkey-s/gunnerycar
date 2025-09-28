@@ -11,6 +11,7 @@
 #include "tf2/LinearMath/Quaternion.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "nav_msgs/msg/path.hpp"
+#include "geometry_msgs/msg/point.h"
 
 #include "behaviortree_cpp_v3/behavior_tree.h"
 #include "behaviortree_cpp_v3/bt_factory.h"
@@ -19,12 +20,18 @@
 
 namespace autofleet
 {
+const float max_turn_angle = 0.72; // 最大转弯角度，弧度值
+const float path_pose_interval = 0.3;
 struct RobotInfo{
     std::string robot_name;
-    geometry_msgs::msg::Pose relative_pose; // 在编队中的相对位置
+    geometry_msgs::msg::Point relative_pose; // 在编队中的相对位置
     bool is_prepared; // 是否已经准备好
 
-    RobotInfo(std::string name,bool prepared = false) : robot_name(name){}
+    RobotInfo(std::string name, std::vector<double> pose ,bool prepared = false) : robot_name(name)
+    {
+        relative_pose.x = pose[0];
+        relative_pose.y = pose[1];
+    }
 };
 
 class AutofleetMgrNode : public rclcpp::Node
@@ -34,12 +41,15 @@ public:
     using GoalHandleNavigateToPose = rclcpp_action::ClientGoalHandle<NavigateToPose>;
 
     AutofleetMgrNode();
+#ifdef TESTING
     virtual ~AutofleetMgrNode();
+#endif
     void CreateTree(); // 创建行为树
 
     geometry_msgs::msg::Pose::SharedPtr GetTargetPose();
     std::shared_ptr<tf2_ros::Buffer> GetTfBuffer();
     nav_msgs::msg::Path::SharedPtr GetHeadPath();
+    std::vector<RobotInfo> GetRobotsInfo();
     void SendGoal();
     void CancelGoal();
     void Run();
@@ -51,6 +61,8 @@ private:
     void path_callback(const nav_msgs::msg::Path::SharedPtr msg);
     void lookahead_callback(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
     void tf_timer_callback();
+
+    void WriteFile();
 
 private:
     // 行为树相关
@@ -72,7 +84,7 @@ private:
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_pub_;
     
     // 编队数据
-    std::unordered_map<std::string, RobotInfo> robots_info_; // 机器人信息
+    std::vector<RobotInfo> robots_info_; // 机器人信息
     std::string head_robot_name_; // 头车名称
     nav_msgs::msg::Path::SharedPtr head_lookhead_path_; // 头车前视路径
 };
