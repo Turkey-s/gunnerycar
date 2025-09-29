@@ -1,16 +1,14 @@
 /autofleet_node:
   ros__parameters:
     target_pose:
-    - 17.5
-    - 4.0
-    - 0.0
-    - 0.0
-    - 0.0
-    - 1.57
-    use_sim_time: false
+    - 17.5 #x
+    - 4.0 #y
+    - 1.57 #yaw
+    use_sim_time: true
     plugins:
     - "FormTeamState"
     - "MoveState"
     - "BreakTeamState"
-    robots_name: ["robot1"]
-    robot1: [0.0 ,0.0]
+    robots_name: ["robot1", "robot2"]
+    robot1: [0.0 ,0.0] #robot1在编队中的位置
+    robot2: [2.0, 0.0] #robot2在编队中的位置(x的值表示与头车的距离，且在头车的后方为正方向)

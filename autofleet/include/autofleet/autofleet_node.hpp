@@ -27,7 +27,7 @@ struct RobotInfo{
     geometry_msgs::msg::Point relative_pose; // 在编队中的相对位置
     bool is_prepared; // 是否已经准备好
 
-    RobotInfo(std::string name, std::vector<double> pose ,bool prepared = false) : robot_name(name)
+    RobotInfo(std::string name, std::vector<double> pose) : robot_name(name), is_prepared(false)
     {
         relative_pose.x = pose[0];
         relative_pose.y = pose[1];
