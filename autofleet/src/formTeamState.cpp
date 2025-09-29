@@ -29,8 +29,8 @@ BT::NodeStatus FormTeamState::tick()
     }
 
     m_stage = STAGE_FOLLOW_MOVE;
-    node->CancelGoal(); // 让头车原地待命
-    //跟随车启动TODO
+    node->CancelGoal(robot_infos_[0].robot_name); // 让头车原地待命
+    node->SendGoal(robot_infos_[1].robot_name, follow_path->at(0));
     m_follow_moving_index = 1; // index = 1的车开始跟随
     return BT::NodeStatus::RUNNING;
 
@@ -44,7 +44,8 @@ BT::NodeStatus FormTeamState::tick()
         m_stage = STAGE_NONE;
         return BT::NodeStatus::SUCCESS;
       }
-      //下一个编号的跟随车启动TODO
+      //下一个编号的跟随车启动
+      node->SendGoal(robot_infos_[1].robot_name, follow_path->at(m_follow_moving_index - 1));
     }
     else
     {

@@ -1,0 +1,3 @@
+robots_name: ['robot1', 'robot2']
+robot1: "-8.0 -5.5 0.1" #gazebo初始位置
+robot2: "-10.0 -5.5 0.1" #gazebo初始位置

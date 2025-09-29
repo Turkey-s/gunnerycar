@@ -12,7 +12,7 @@ BT::NodeStatus MoveState::tick()
   auto node = GetNodeSharePtr();
 
   if(is_first_tick)
-    node->SendGoal(); // 向头车发送目标点
+    node->SendGoal(robot_infos_[0].robot_name, *(node->GetTargetPose())); // 向头车发送目标点
   
   // 观察编队状态
 

@@ -46,18 +46,18 @@ public:
 #endif
     void CreateTree(); // 创建行为树
 
-    geometry_msgs::msg::Pose::SharedPtr GetTargetPose();
+    geometry_msgs::msg::PoseStamped::SharedPtr GetTargetPose();
     std::shared_ptr<tf2_ros::Buffer> GetTfBuffer();
     nav_msgs::msg::Path::SharedPtr GetHeadPath();
     std::vector<RobotInfo> GetRobotsInfo();
-    void SendGoal();
-    void CancelGoal();
+    void SendGoal(std::string robot_name, geometry_msgs::msg::PoseStamped target_pose);
+    void CancelGoal(std::string robot_name);
     void Run();
 
 private:
     void TargetPoseCallback(const geometry_msgs::msg::Pose::SharedPtr msg);
-    void goal_responce_callback(std::shared_future<GoalHandleNavigateToPose::SharedPtr> future);
-    void result_callback(const GoalHandleNavigateToPose::WrappedResult & result);
+    void goal_responce_callback(std::string robot_name, std::shared_future<GoalHandleNavigateToPose::SharedPtr> future);
+    void result_callback(std::string robot_name, const GoalHandleNavigateToPose::WrappedResult & result);
     void path_callback(const nav_msgs::msg::Path::SharedPtr msg);
     void lookahead_callback(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
     void tf_timer_callback();
@@ -73,12 +73,13 @@ private:
     
     // Node相关
     rclcpp::TimerBase::SharedPtr timer_ = nullptr;
-    geometry_msgs::msg::Pose::SharedPtr target_pose_ = nullptr;
+    geometry_msgs::msg::PoseStamped::SharedPtr head_target_pose_ = nullptr;
     std::shared_ptr<tf2_ros::Buffer> tf_buffer_ = nullptr;
     std::shared_ptr<tf2_ros::TransformListener> tf_listener_ = nullptr;
-    rclcpp_action::Client<NavigateToPose>::SharedPtr client_ = nullptr;
-    GoalHandleNavigateToPose::SharedPtr goal_handle_ = nullptr;
+    std::unordered_map<std::string, rclcpp_action::Client<NavigateToPose>::SharedPtr> navigation_goal_clients_;
+    std::unordered_map<std::string, GoalHandleNavigateToPose::SharedPtr> goal_handle_;
     rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr head_lookahead_sub_ = nullptr; // 订阅头车前视点
+    std::shared_ptr<rclcpp_action::Client<NavigateToPose>::SendGoalOptions> send_goal_options_;
 
     // Test
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_pub_;
@@ -91,4 +92,4 @@ private:
 
 }
 
-#endif
+#endif // AUTOFLEET_NODE

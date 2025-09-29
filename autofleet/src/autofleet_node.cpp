@@ -26,11 +26,12 @@ AutofleetMgrNode::AutofleetMgrNode() : Node("autofleet_node")
 
   // 初始化目标点
   auto target_pose_param = this->get_parameter("target_pose").as_double_array();
-  target_pose_ = std::make_shared<geometry_msgs::msg::Pose>();
-  target_pose_->position.x = target_pose_param[0];
-  target_pose_->position.y = target_pose_param[1];
-  target_pose_->orientation.z = target_pose_param[2];
-  target_pose_->orientation.w = 1.0;
+  head_target_pose_ = std::make_shared<geometry_msgs::msg::PoseStamped>();
+  head_target_pose_->pose.position.x = target_pose_param[0];
+  head_target_pose_->pose.position.y = target_pose_param[1];
+  head_target_pose_->pose.orientation.z = target_pose_param[2];
+  head_target_pose_->pose.orientation.w = 1.0;
+  head_target_pose_->header.frame_id = "map";
 
   // 初始化机器人列表
   auto robots_name = this->get_parameter("robots_name").as_string_array();
@@ -57,8 +58,13 @@ AutofleetMgrNode::AutofleetMgrNode() : Node("autofleet_node")
   tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
   // 初始化导航客户端
-  client_ = rclcpp_action::create_client<NavigateToPose>(this, head_robot_name_ + "/navigate_to_pose");
+  for (const auto & robot_name : robots_name) {
+    navigation_goal_clients_.insert(std::make_pair(robot_name, 
+    rclcpp_action::create_client<NavigateToPose>(this, robot_name + "/navigate_to_pose")));
+  }
 
+  send_goal_options_ = std::make_shared<rclcpp_action::Client<NavigateToPose>::SendGoalOptions>();
+    
   // 初始化订阅者
   head_lookahead_sub_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(
     head_robot_name_ + "/lookahead_point",
@@ -77,9 +83,9 @@ void AutofleetMgrNode::Run()
   timer_ = this->create_wall_timer(1s, std::bind(&AutofleetMgrNode::tf_timer_callback, this));
 }
 
-geometry_msgs::msg::Pose::SharedPtr AutofleetMgrNode::GetTargetPose()
+geometry_msgs::msg::PoseStamped::SharedPtr AutofleetMgrNode::GetTargetPose()
 {
-  return target_pose_;
+  return head_target_pose_;
 }
 
 std::shared_ptr<tf2_ros::Buffer> AutofleetMgrNode::GetTfBuffer()
@@ -118,55 +124,58 @@ void AutofleetMgrNode::CreateTree()
   tree_ = factory_.createTreeFromFile(bt_xml_file, blackboard_);
 }
 
-void AutofleetMgrNode::SendGoal()
+void AutofleetMgrNode::SendGoal(std::string robot_name, geometry_msgs::msg::PoseStamped target_pose)
 {
     auto goal_msg = NavigateToPose::Goal();
-    goal_msg.pose.header.frame_id = "map";
+    goal_msg.pose = target_pose;
     goal_msg.pose.header.stamp = this->now();
     
-    RCLCPP_INFO(this->get_logger(), "目标点参数：%f, %f, %f", target_pose_->position.x, target_pose_->position.y, target_pose_->orientation.z);
+    RCLCPP_INFO(this->get_logger(), "目标点参数：%f, %f, %f", target_pose.pose.position.x, target_pose.pose.position.y, target_pose.pose.orientation.z);
 
-    goal_msg.pose.pose.position = target_pose_->position;
-    goal_msg.pose.pose.orientation = target_pose_->orientation;
+    send_goal_options_->goal_response_callback = std::bind(&AutofleetMgrNode::goal_responce_callback, this, robot_name, std::placeholders::_1);
+    send_goal_options_->result_callback = std::bind(&AutofleetMgrNode::result_callback, this, robot_name, std::placeholders::_1);
 
-    auto send_goal_options = rclcpp_action::Client<NavigateToPose>::SendGoalOptions();
-    send_goal_options.goal_response_callback = std::bind(&AutofleetMgrNode::goal_responce_callback, this, std::placeholders::_1);
-    send_goal_options.result_callback = std::bind(&AutofleetMgrNode::result_callback, this, std::placeholders::_1);
-    this->client_->async_send_goal(goal_msg, send_goal_options);
+    navigation_goal_clients_[robot_name]->async_send_goal(goal_msg, *send_goal_options_);
 }
 
-void AutofleetMgrNode::CancelGoal()
+void AutofleetMgrNode::CancelGoal(std::string robot_name)
 {
-    if (goal_handle_) {
-        this->client_->async_cancel_goal(goal_handle_);
-        goal_handle_ = nullptr;
-    }
+  if(navigation_goal_clients_.count(robot_name) == 0)
+  {
+    RCLCPP_INFO(this->get_logger(), "没有找到机器人 %s 的导航客户端", robot_name.c_str());
+    return;
+  }
+
+  if (goal_handle_.count(robot_name) > 0) {
+      navigation_goal_clients_[robot_name]->async_cancel_goal(goal_handle_[robot_name]);
+      goal_handle_[robot_name] = nullptr;
+  }
 }
 
-void AutofleetMgrNode::goal_responce_callback(std::shared_future<GoalHandleNavigateToPose::SharedPtr> future)
+void AutofleetMgrNode::goal_responce_callback(std::string robot_name, std::shared_future<GoalHandleNavigateToPose::SharedPtr> future)
 {
     auto goal_handle = future.get();
     if (!goal_handle) {
         RCLCPP_ERROR(this->get_logger(), "Goal was rejected by server");
     } else {
-        goal_handle_ = goal_handle;
+        goal_handle_[robot_name] = goal_handle;
         RCLCPP_INFO(this->get_logger(), "Goal accepted by server, waiting for result");
     }
 }
 
-void AutofleetMgrNode::result_callback(const GoalHandleNavigateToPose::WrappedResult & result)
+void AutofleetMgrNode::result_callback(std::string robot_name, const GoalHandleNavigateToPose::WrappedResult & result)
 {
     switch (result.code) {
         case rclcpp_action::ResultCode::SUCCEEDED:
             break;
         case rclcpp_action::ResultCode::ABORTED:
-            RCLCPP_ERROR(this->get_logger(), "Goal was aborted");
+            RCLCPP_ERROR(this->get_logger(), "%s Goal was aborted", robot_name.c_str());
             break;
         case rclcpp_action::ResultCode::CANCELED:
-            RCLCPP_ERROR(this->get_logger(), "Goal was canceled");
+            RCLCPP_ERROR(this->get_logger(), "%s Goal was canceled", robot_name.c_str());
             break;
         default:
-            RCLCPP_ERROR(this->get_logger(), "Unknown result code");
+            RCLCPP_ERROR(this->get_logger(), "%s Unknown result code", robot_name.c_str());
     }
 }
 
@@ -233,7 +242,7 @@ void AutofleetMgrNode::tf_timer_callback(){
 
   // 所有机器人已就位
   timer_->cancel();
-  SendGoal();
+  SendGoal(head_robot_name_, *head_target_pose_);
   // tree_.tickRootWhileRunning(std::chrono::milliseconds(30));
 }
 
