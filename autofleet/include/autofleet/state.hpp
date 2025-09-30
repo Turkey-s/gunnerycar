@@ -7,7 +7,7 @@
 namespace autofleet
 {
 using PoseStamp = geometry_msgs::msg::PoseStamped;
-using VecPoseStamp = std::shared_ptr<std::vector<PoseStamp> >;
+using VecPoseStampPtr = std::shared_ptr<std::vector<PoseStamp> >;
 class State : public BT::ActionNodeBase
 {
 public:
@@ -31,7 +31,7 @@ public:
     {
         if(weak_node_.expired()) return BT::NodeStatus::FAILURE;
         auto node = weak_node_.lock();
-        RCLCPP_INFO(node->get_logger(), "tick %s", xml_tag_name_.c_str());
+        LOG_OUT_INFO(node->get_logger(), "tick %s", xml_tag_name_.c_str());
         return BT::NodeStatus::SUCCESS;
     }
 
@@ -50,7 +50,7 @@ public:
     {
     }
 
-    VecPoseStamp ComputeFollowPose();
+    VecPoseStampPtr ComputeFollowPose();
 
     // 转换坐标系，将in_pose的坐标系转换到out_pose的坐标系
     bool TransformPose(const PoseStamp& in_pose, PoseStamp& out_pose, const std::string& target_frame_id);
@@ -67,7 +67,7 @@ private:
 
 public:
     std::vector<RobotInfo> robot_infos_;
-    VecPoseStamp last_follow_pose_;
+    VecPoseStampPtr last_follow_pose_;
 };
 
 // 依据一个目标点，以相同的航向和偏移找到下一个目标点
@@ -82,19 +82,29 @@ void computePoseByOffset(const PoseStamp& in_pose, PoseStamp& out_pose,
     //左右偏移量
     out_pose.pose.position.x = in_pose.pose.position.x + offset_y * std::sin(in_pose.pose.orientation.z);
     out_pose.pose.position.y = in_pose.pose.position.y - offset_y * std::cos(in_pose.pose.orientation.z);
+
+    out_pose.header.frame_id = in_pose.header.frame_id;
 }
 
 /*暂时只支持一字型 TODO后续将支持品字形*/
 //依据当前头车的目标点，计算跟随车的目标点，跟随车的目标点为头车path上的某一个点的相对位置，如有左右偏移，那就是以那一点的左右偏移量
-VecPoseStamp State::ComputeFollowPose()
+VecPoseStampPtr State::ComputeFollowPose()
 {
     auto node = GetNodeSharePtr();
-    if(node == nullptr) return VecPoseStamp();
-    if(robot_infos_.size() < 2) VecPoseStamp();
-
+    if(node == nullptr) 
+    {
+        LOG_OUT_ERROR(node->get_logger(), "ComputeFollowPose node is nullptr");
+        return nullptr;
+    }
+    
     auto& head_path = node->GetHeadPath()->poses;
+    
+    if(robot_infos_.size() < 2 || head_path.size() == 0) 
+    {
+        return nullptr;
+    }
 
-    auto follow_pose = VecPoseStamp();
+    auto follow_pose = std::make_shared<std::vector<PoseStamp> >();
     
     // 计算跟随车的目标点，误差为0.3m
     float sum = 0.0;
@@ -119,6 +129,7 @@ VecPoseStamp State::ComputeFollowPose()
     {
         PoseStamp out_pose;
         computePoseByOffset(head_path.back(), out_pose, robot_infos_[robot_index].relative_pose.x - sum, robot_infos_[robot_index].relative_pose.y);
+        LOG_OUT_INFO(node->get_logger(), "ComputeFollowPose %d %f %s", robot_index, out_pose.pose.position.x, out_pose.header.frame_id.c_str());
         follow_pose->push_back(out_pose);
         robot_index++;
     }

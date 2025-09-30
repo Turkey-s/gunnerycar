@@ -10,21 +10,11 @@
 
 namespace autofleet
 {
-#define LOG_OUT(level,format, ...) \
-    RCLCPP_##level(get_logger(), "[%s:%d %s]" format, __FILE__, __LINE__, __func__, ##__VA_ARGS__)
-
-// 具体级别的便捷宏
-#define LOG_OUT_INFO(...)    LOG_OUT(INFO, __VA_ARGS__)
-#define LOG_OUT_WARN(...)    LOG_OUT(WARN, __VA_ARGS__)
-#define LOG_OUT_ERROR(...)   LOG_OUT(ERROR, __VA_ARGS__)
-#define LOG_OUT_DEBUG(...)   LOG_OUT(DEBUG, __VA_ARGS__)
-#define LOG_OUT_FATAL(...)   LOG_OUT(FATAL, __VA_ARGS__)
-
 const float first_lookaheading_angle = 0.0;
 using namespace std::chrono_literals;
 AutofleetMgrNode::AutofleetMgrNode() : Node("autofleet_node")
 {
-  LOG_OUT_INFO("Creating autofleet node");
+  LOG_OUT_INFO(get_logger(), "Creating autofleet node");
   declare_parameter("bt_xml_file", "bt_autofleet.xml");
   declare_parameter("plugins", std::vector<std::string>{"FormTeamState", "MoveState", "BreakTeamState"});
   declare_parameter("target_pose", std::vector<double>{0.0, 0.0, 0.0});
@@ -33,6 +23,10 @@ AutofleetMgrNode::AutofleetMgrNode() : Node("autofleet_node")
   // 初始化成员变量
   head_lookhead_path_ = std::make_shared<nav_msgs::msg::Path>();
   head_lookhead_path_->header.frame_id = "map";
+
+  // 初始化回调组
+  timer_cb_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  client_cb_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
 
   // 初始化目标点
   auto target_pose_param = this->get_parameter("target_pose").as_double_array();
@@ -71,6 +65,9 @@ AutofleetMgrNode::AutofleetMgrNode() : Node("autofleet_node")
   for (const auto & robot_name : robots_name) {
     navigation_goal_clients_.insert(std::make_pair(robot_name, 
     rclcpp_action::create_client<NavigateToPose>(this, robot_name + "/navigate_to_pose")));
+  
+    lifecycle_mgr_clients_.insert(std::make_pair(robot_name,
+    create_client<std_srvs::srv::Trigger>(robot_name + "/lifecycle_manager_navigation/is_active", rmw_qos_profile_services_default, client_cb_group_)));
   }
 
   send_goal_options_ = std::make_shared<rclcpp_action::Client<NavigateToPose>::SendGoalOptions>();
@@ -90,7 +87,7 @@ void AutofleetMgrNode::Run()
 {
   CreateTree();
   // 初始化定时器
-  timer_ = this->create_wall_timer(1s, std::bind(&AutofleetMgrNode::tf_timer_callback, this));
+  timer_ = this->create_wall_timer(1s, std::bind(&AutofleetMgrNode::tf_timer_callback, this), timer_cb_group_);
 }
 
 geometry_msgs::msg::PoseStamped::SharedPtr AutofleetMgrNode::GetTargetPose()
@@ -116,7 +113,7 @@ std::vector<RobotInfo> AutofleetMgrNode::GetRobotsInfo()
 void AutofleetMgrNode::CreateTree()
 {
 #ifdef TESTING
-  LOG_OUT_INFO("注意Creating tree");
+  LOG_OUT_INFO(get_logger(),"注意Creating tree");
 #endif
   std::vector<std::string> plugin_libraries = get_parameter("plugins").as_string_array();
   BT::SharedLibrary loader;
@@ -140,7 +137,7 @@ void AutofleetMgrNode::SendGoal(std::string robot_name, geometry_msgs::msg::Pose
     goal_msg.pose = target_pose;
     goal_msg.pose.header.stamp = this->now();
     
-    LOG_OUT_INFO("目标点参数：%f, %f, %f", target_pose.pose.position.x, target_pose.pose.position.y, target_pose.pose.orientation.z);
+    LOG_OUT_INFO(get_logger(), "%s 目标点参数：%f, %f, %f", robot_name.c_str(), target_pose.pose.position.x, target_pose.pose.position.y, target_pose.pose.orientation.z);
 
     send_goal_options_->goal_response_callback = std::bind(&AutofleetMgrNode::goal_responce_callback, this, robot_name, std::placeholders::_1);
     send_goal_options_->result_callback = std::bind(&AutofleetMgrNode::result_callback, this, robot_name, std::placeholders::_1);
@@ -152,11 +149,12 @@ void AutofleetMgrNode::CancelGoal(std::string robot_name)
 {
   if(navigation_goal_clients_.count(robot_name) == 0)
   {
-    LOG_OUT_INFO("没有找到机器人 %s 的导航客户端", robot_name.c_str());
+    LOG_OUT_INFO(get_logger(), "没有找到机器人 %s 的导航客户端", robot_name.c_str());
     return;
   }
 
   if (goal_handle_.count(robot_name) > 0) {
+      LOG_OUT_INFO(get_logger(), "%s 取消导航目标", robot_name.c_str());
       navigation_goal_clients_[robot_name]->async_cancel_goal(goal_handle_[robot_name]);
       goal_handle_[robot_name] = nullptr;
   }
@@ -169,7 +167,7 @@ void AutofleetMgrNode::goal_responce_callback(std::string robot_name, std::share
         RCLCPP_ERROR(this->get_logger(), "Goal was rejected by server %s", robot_name.c_str());
     } else {
         goal_handle_[robot_name] = goal_handle;
-        LOG_OUT_INFO("Goal accepted by server, waiting for result");
+        LOG_OUT_INFO(get_logger(), "Goal accepted by server, waiting for result");
     }
 }
 
@@ -192,7 +190,7 @@ void AutofleetMgrNode::result_callback(std::string robot_name, const GoalHandleN
 void AutofleetMgrNode::lookahead_callback(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
 {
   geometry_msgs::msg::PoseStamped out_pose = *msg;
-  LOG_OUT_INFO("lookahead_callback enter %d", head_lookhead_path_->poses.size());
+  LOG_OUT_INFO(get_logger(), "lookahead_callback enter %d", head_lookhead_path_->poses.size());
   if(msg->header.frame_id != "map"){
     try{
       tf_buffer_->transform(*msg, out_pose, "map", tf2::durationFromSec(1.0));
@@ -211,7 +209,7 @@ void AutofleetMgrNode::lookahead_callback(const geometry_msgs::msg::PoseStamped:
     }
   }
 
-  LOG_OUT_INFO("lookahead point: %f, %f, %f", out_pose.pose.position.x, out_pose.pose.position.y, out_pose.pose.orientation.z);
+  LOG_OUT_INFO(get_logger(), "lookahead point: %f, %f, %f", out_pose.pose.position.x, out_pose.pose.position.y, out_pose.pose.orientation.z);
 
   /*为path中的每个点添加朝向*/
   if(head_lookhead_path_->poses.size() > 0)
@@ -232,38 +230,82 @@ void AutofleetMgrNode::lookahead_callback(const geometry_msgs::msg::PoseStamped:
 
   head_lookhead_path_->poses.push_back(out_pose);
 
-  tree_.tickRoot(); // 在收到头车点的目标点后，执行一次行为树
-
   path_pub_->publish(*head_lookhead_path_); // for visualization
 }
 
 void AutofleetMgrNode::tf_timer_callback(){
   for(auto& robot : robots_info_){
-    LOG_OUT_INFO("检查机器人 %s 是否就位 %d", robot.robot_name.c_str(), robot.is_prepared);
+    LOG_OUT_INFO(get_logger(), "检查机器人 %s 是否就位 %d", robot.robot_name.c_str(), robot.is_prepared);
     if(robot.is_prepared) continue;
     
-    try{
-      geometry_msgs::msg::TransformStamped transformStamped;
-      transformStamped = tf_buffer_->lookupTransform("map", robot.robot_name + "_base_link", tf2::TimePointZero);
-      robot.is_prepared = true;
-    }catch(tf2::TransformException &ex){
-      RCLCPP_WARN(this->get_logger(), "注意Could not transform %s to %s :...: %s", "map", robot.robot_name.c_str(), ex.what());
+    //检查机器人lifecycleManager是否被激活
+    if(lifecycle_mgr_clients_.count(robot.robot_name) == 0)
+    {
+      LOG_OUT_WARN(get_logger(), "没有找到机器人 %s 的生命周期管理客户端", robot.robot_name.c_str());
       return;
     }
+
+    if(!lifecycle_mgr_clients_[robot.robot_name]->wait_for_service(0.1s))
+    {
+      LOG_OUT_WARN(get_logger(), "机器人 %s 的生命周期管理客户端不可用", robot.robot_name.c_str());
+      return;
+    }
+    
+    auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
+    auto future_result = lifecycle_mgr_clients_[robot.robot_name]->async_send_request(request);
+
+    try{
+      LOG_OUT_INFO(get_logger(), "TEst %s 的生命周期管理服务端等待激活 %s", robot.robot_name.c_str(), thread_info().c_str());
+      auto ret = future_result.wait_for(1s);
+      if(ret != std::future_status::ready)
+      {
+        LOG_OUT_INFO(get_logger(), "Test %s not ready %d %s", robot.robot_name.c_str(), ret, thread_info().c_str());
+        return;
+      }
+      LOG_OUT_INFO(get_logger(), "Test %s 的生命周期管理服务端已回复 %s", robot.robot_name.c_str(), thread_info().c_str());
+    }
+    catch(const std::exception &e){
+      LOG_OUT_WARN(get_logger(), "机器人 %s , %s", robot.robot_name.c_str(), e.what());
+      return;
+    }
+
+    auto ret = future_result.get();
+    if(ret->success)
+    {
+      robot.is_prepared = true;
+      LOG_OUT_INFO(get_logger(), "机器人 %s 的lifecycle管理服务端已激活", robot.robot_name.c_str());
+    }
+    else
+    {
+      LOG_OUT_WARN(get_logger(), "机器人 %s 的lifecycle管理服务端未激活", robot.robot_name.c_str());
+      return;
+    }
+
+    //检查tf变换
+    // try{
+    //   geometry_msgs::msg::TransformStamped transformStamped;
+    //   transformStamped = tf_buffer_->lookupTransform("map", robot.robot_name + "_base_link", tf2::TimePointZero);
+    //   robot.is_prepared = true;
+    // }catch(tf2::TransformException &ex){
+    //   RCLCPP_WARN(this->get_logger(), "注意Could not transform %s to %s :...: %s", "map", robot.robot_name.c_str(), ex.what());
+    //   return;
+    // }
   }
 
-  LOG_OUT_INFO("所有机器人已就位");
+  LOG_OUT_INFO(get_logger(), "所有机器人已就位");
 
   // 所有机器人已就位
   timer_->cancel();
   SendGoal(head_robot_name_, *head_target_pose_);
-  // tree_.tickRootWhileRunning(std::chrono::milliseconds(30));
+
+  LOG_OUT_INFO(get_logger(), "tf_timer_callback exit");
+  tree_.tickRootWhileRunning(std::chrono::milliseconds(30));
 }
 
 
 AutofleetMgrNode::~AutofleetMgrNode()
 {
-  LOG_OUT_INFO("注意AutofleetMgrNode::~AutofleetMgrNode()");
+  LOG_OUT_INFO(get_logger(), "注意AutofleetMgrNode::~AutofleetMgrNode()");
 #ifdef TESTING
   WriteFile();
 #endif

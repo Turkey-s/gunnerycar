@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.5)
 project(autofleet)
 
+SET(CMAKE_BUILD_TYPE "Debug")  
+SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g -ggdb")
+SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
+
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
   set(CMAKE_C_STANDARD 99)
@@ -30,6 +34,7 @@ set(dependencies
   tf2_ros
   nav_msgs
   std_msgs
+  std_srvs
 )
 
 foreach(package IN LISTS dependencies)

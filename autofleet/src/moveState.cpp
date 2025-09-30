@@ -10,7 +10,7 @@ void MoveState::ComputeHeadVelRate(){
 BT::NodeStatus MoveState::tick()
 {
   auto node = GetNodeSharePtr();
-
+  LOG_OUT_INFO(node->get_logger(), "MoveState tick");
   if(is_first_tick)
     node->SendGoal(robot_infos_[0].robot_name, *(node->GetTargetPose())); // 向头车发送目标点
   

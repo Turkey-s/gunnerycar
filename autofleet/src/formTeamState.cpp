@@ -5,8 +5,18 @@ namespace autofleet
 
 BT::NodeStatus FormTeamState::tick()
 {
+  std::cout << "FormTeamState::tick enter" << std::endl;
+
+  //编队中只有头车，那么直接结束此阶段
+  if(robot_infos_.size() == 1) return BT::NodeStatus::SUCCESS;
+
   // 计算出每个车要跟随的位姿
   auto follow_path = ComputeFollowPose();
+
+  if(follow_path == nullptr)
+  {
+    return BT::NodeStatus::RUNNING;
+  }
 
   if(follow_path->size() != robot_infos_.size() - 1)
   {
@@ -20,8 +30,7 @@ BT::NodeStatus FormTeamState::tick()
   switch (m_stage)
   {
   case STAGE_HEAD_MOVE:
-    //编队中只有头车，那么直接结束此阶段
-    if(follow_path->size() == 0) return BT::NodeStatus::SUCCESS;
+    LOG_OUT_INFO(node->get_logger(), "");
 
     for(int index = 1; index < robot_infos_.size(); index++)
     {
@@ -32,12 +41,15 @@ BT::NodeStatus FormTeamState::tick()
     node->CancelGoal(robot_infos_[0].robot_name); // 让头车原地待命
     node->SendGoal(robot_infos_[1].robot_name, follow_path->at(0));
     m_follow_moving_index = 1; // index = 1的车开始跟随
+    LOG_OUT_INFO(node->get_logger(), "");
     return BT::NodeStatus::RUNNING;
 
     break;
   case STAGE_FOLLOW_MOVE:
     if(FollowMovedEnd(follow_path->at(m_follow_moving_index - 1), robot_infos_[m_follow_moving_index].robot_name))
     {
+      LOG_OUT_INFO(node->get_logger(), "%s followed end", robot_infos_[m_follow_moving_index].robot_name.c_str());
+      node->CancelGoal(robot_infos_[m_follow_moving_index].robot_name);
       m_follow_moving_index++;
       if(m_follow_moving_index == robot_infos_.size())
       {
@@ -49,6 +61,7 @@ BT::NodeStatus FormTeamState::tick()
     }
     else
     {
+      LOG_OUT_INFO(node->get_logger(), "");
       return BT::NodeStatus::RUNNING;
     }
     break;
@@ -56,7 +69,7 @@ BT::NodeStatus FormTeamState::tick()
   default:
     break;
   }
-
+  LOG_OUT_INFO(node->get_logger(), "");
   // 如果走到这里，说明有问题
   return BT::NodeStatus::FAILURE;
 }

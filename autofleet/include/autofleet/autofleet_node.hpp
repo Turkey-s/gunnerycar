@@ -12,6 +12,7 @@
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "nav_msgs/msg/path.hpp"
 #include "geometry_msgs/msg/point.h"
+#include "std_srvs/srv/trigger.hpp"
 
 #include "behaviortree_cpp_v3/behavior_tree.h"
 #include "behaviortree_cpp_v3/bt_factory.h"
@@ -20,6 +21,23 @@
 
 namespace autofleet
 {
+#define LOG_OUT(level, logger, format, ...) \
+    RCLCPP_##level(logger, "[%s:%d %s]" format, __FILE__, __LINE__, __func__, ##__VA_ARGS__)
+
+// 具体级别的便捷宏
+#define LOG_OUT_INFO(logger, ...)    LOG_OUT(INFO, logger,__VA_ARGS__)
+#define LOG_OUT_WARN(logger, ...)    LOG_OUT(WARN, logger,__VA_ARGS__)
+#define LOG_OUT_ERROR(logger, ...)   LOG_OUT(ERROR, logger,__VA_ARGS__)
+#define LOG_OUT_DEBUG(logger, ...)   LOG_OUT(DEBUG, logger,__VA_ARGS__)
+#define LOG_OUT_FATAL(logger, ...)   LOG_OUT(FATAL, logger,__VA_ARGS__)
+
+std::string thread_info()
+{
+    std::ostringstream thread_str;
+    thread_str << "Thread ID: " << std::this_thread::get_id();
+    return thread_str.str();
+}
+
 const float max_turn_angle = 0.72; // 最大转弯角度，弧度值
 const float path_pose_interval = 0.3;
 struct RobotInfo{
@@ -77,9 +95,13 @@ private:
     std::shared_ptr<tf2_ros::Buffer> tf_buffer_ = nullptr;
     std::shared_ptr<tf2_ros::TransformListener> tf_listener_ = nullptr;
     std::unordered_map<std::string, rclcpp_action::Client<NavigateToPose>::SharedPtr> navigation_goal_clients_;
+    std::unordered_map<std::string, rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr> lifecycle_mgr_clients_;
     std::unordered_map<std::string, GoalHandleNavigateToPose::SharedPtr> goal_handle_;
     rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr head_lookahead_sub_ = nullptr; // 订阅头车前视点
     std::shared_ptr<rclcpp_action::Client<NavigateToPose>::SendGoalOptions> send_goal_options_;
+
+    rclcpp::CallbackGroup::SharedPtr timer_cb_group_; //定时器互斥回调组
+    rclcpp::CallbackGroup::SharedPtr client_cb_group_; // 回调组
 
     // Test
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_pub_;
