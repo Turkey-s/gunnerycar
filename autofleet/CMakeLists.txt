@@ -72,11 +72,17 @@ endforeach()
 #添加执行库文件
 add_executable(autofleet_node_exec src/main.cpp)
 
+add_executable(mainTest test/mainTest.cpp)
+
 target_link_libraries(autofleet_node_exec
   autofleet_node
 )
 
 ament_target_dependencies(autofleet_node_exec
+  ${dependencies}
+)
+
+ament_target_dependencies(mainTest
   ${dependencies}
 )
 
@@ -91,6 +97,10 @@ install(DIRECTORY include
 
 #ROS2 run 是在 lib/autofleet 下找可执行文件
 install(TARGETS autofleet_node_exec
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(TARGETS mainTest
   DESTINATION lib/${PROJECT_NAME}
 )
 

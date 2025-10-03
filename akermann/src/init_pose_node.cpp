@@ -55,6 +55,7 @@ private:
     }
 
 private:
+    
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr pub_;
 };
@@ -63,7 +64,9 @@ int main(int argc, char** argv)
 {
     rclcpp::init(argc, argv);
     auto node = std::make_shared<InitPoseNode>();
-    rclcpp::spin(node);
+    rclcpp::executors::MultiThreadedExecutor exe;
+    exe.add_node(node);
+    exe.spin();
     rclcpp::shutdown();
     return 0;
 }

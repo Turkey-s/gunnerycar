@@ -52,14 +52,14 @@ def launch_setup(context, *args, **kwargs):
             output='screen',
         ))
     
-    ret.append(launch_ros.actions.Node(
-        namespace=robot_name,  # 这里加命名空间
-        package='ackermann',
-        executable='init_pose_node',
-        name='init_pose_node',
-        output='screen',
-        parameters = [init_pose_path, {"robot_name" : robot_name}],
-    ))
+    # ret.append(launch_ros.actions.Node(
+    #     namespace=robot_name,  # 这里加命名空间
+    #     package='ackermann',
+    #     executable='init_pose_node',
+    #     name='init_pose_node',
+    #     output='screen',
+    #     parameters = [init_pose_path, {"robot_name" : robot_name}],
+    # ))
     return ret
 
 def generate_launch_description():

@@ -1,12 +1,10 @@
 #include <chrono>
 #include <functional>
+#include <iostream>
+#include <fstream>
+
 #include "autofleet/autofleet_node.hpp"
 #include "ament_index_cpp/get_package_share_directory.hpp"
-#include "autofleet/breakTeamState.hpp"
-#include "autofleet/formTeamState.hpp"
-#include "autofleet/moveState.hpp"
-#include "iostream"
-#include <fstream>
 
 namespace autofleet
 {
@@ -200,16 +198,19 @@ void AutofleetMgrNode::lookahead_callback(const geometry_msgs::msg::PoseStamped:
       RCLCPP_ERROR(this->get_logger(), "Could not transform %s to %s :...: %s", msg->header.frame_id.c_str(), "map", ex.what());
     }
   }
+  LOG_OUT_INFO(get_logger(), "lookahead_pre point: %f, %f, %s", msg->pose.position.x, msg->pose.position.y, msg->header.frame_id.c_str());
+
+  LOG_OUT_INFO(get_logger(), "lookahead point: %f, %f, %s", out_pose.pose.position.x, out_pose.pose.position.y, out_pose.header.frame_id.c_str());
 
   if(head_lookhead_path_->poses.size() > 0){
     auto& last_pose = head_lookhead_path_->poses.back();
+    LOG_OUT_INFO(get_logger(), "last_pose point: %f, %f, %s", last_pose.pose.position.x, last_pose.pose.position.y, last_pose.header.frame_id.c_str());
+
     // 去除太密集的点
     if(std::pow(last_pose.pose.position.x - out_pose.pose.position.x, 2) + std::pow(last_pose.pose.position.y - out_pose.pose.position.y, 2) < path_pose_interval * path_pose_interval){
       return;
     }
   }
-
-  LOG_OUT_INFO(get_logger(), "lookahead point: %f, %f, %f", out_pose.pose.position.x, out_pose.pose.position.y, out_pose.pose.orientation.z);
 
   /*为path中的每个点添加朝向*/
   if(head_lookhead_path_->poses.size() > 0)
@@ -245,7 +246,7 @@ void AutofleetMgrNode::tf_timer_callback(){
       return;
     }
 
-    if(!lifecycle_mgr_clients_[robot.robot_name]->wait_for_service(0.1s))
+    if(!lifecycle_mgr_clients_[robot.robot_name]->wait_for_service(1s))
     {
       LOG_OUT_WARN(get_logger(), "机器人 %s 的生命周期管理客户端不可用", robot.robot_name.c_str());
       return;
@@ -254,23 +255,16 @@ void AutofleetMgrNode::tf_timer_callback(){
     auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
     auto future_result = lifecycle_mgr_clients_[robot.robot_name]->async_send_request(request);
 
-    try{
-      LOG_OUT_INFO(get_logger(), "TEst %s 的生命周期管理服务端等待激活 %s", robot.robot_name.c_str(), thread_info().c_str());
-      auto ret = future_result.wait_for(1s);
-      if(ret != std::future_status::ready)
-      {
-        LOG_OUT_INFO(get_logger(), "Test %s not ready %d %s", robot.robot_name.c_str(), ret, thread_info().c_str());
-        return;
-      }
-      LOG_OUT_INFO(get_logger(), "Test %s 的生命周期管理服务端已回复 %s", robot.robot_name.c_str(), thread_info().c_str());
-    }
-    catch(const std::exception &e){
-      LOG_OUT_WARN(get_logger(), "机器人 %s , %s", robot.robot_name.c_str(), e.what());
+    LOG_OUT_INFO(get_logger(), "TEst %s 的生命周期管理服务端等待激活 %s", robot.robot_name.c_str(), thread_info().c_str());
+    auto ret = future_result.wait_for(1s);
+    if(ret != std::future_status::ready)
+    {
+      LOG_OUT_INFO(get_logger(), "Test %s not ready %d %s", robot.robot_name.c_str(), ret, thread_info().c_str());
       return;
     }
+    LOG_OUT_INFO(get_logger(), "Test %s 的生命周期管理服务端已回复 %s", robot.robot_name.c_str(), thread_info().c_str());
 
-    auto ret = future_result.get();
-    if(ret->success)
+    if(future_result.get()->success)
     {
       robot.is_prepared = true;
       LOG_OUT_INFO(get_logger(), "机器人 %s 的lifecycle管理服务端已激活", robot.robot_name.c_str());

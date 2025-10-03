@@ -56,6 +56,9 @@ public:
     bool TransformPose(const PoseStamp& in_pose, PoseStamp& out_pose, const std::string& target_frame_id);
     // 获得坐标系之前的装换关系
     bool GetTransform(const std::string& source_frame_id, const std::string& target_frame_id, geometry_msgs::msg::TransformStamped& transform);
+    bool FollowMovedEnd(PoseStamp& follow_pose, std::string robot_name);
+
+    virtual void SetFollowPose(VecPoseStampPtr follow_poses_ptr) {};
 
     static BT::PortsList providedPorts()
     {
@@ -67,7 +70,6 @@ private:
 
 public:
     std::vector<RobotInfo> robot_infos_;
-    VecPoseStampPtr last_follow_pose_;
 };
 
 // 依据一个目标点，以相同的航向和偏移找到下一个目标点
@@ -80,8 +82,8 @@ void computePoseByOffset(const PoseStamp& in_pose, PoseStamp& out_pose,
     out_pose.pose.orientation = in_pose.pose.orientation;
 
     //左右偏移量
-    out_pose.pose.position.x = in_pose.pose.position.x + offset_y * std::sin(in_pose.pose.orientation.z);
-    out_pose.pose.position.y = in_pose.pose.position.y - offset_y * std::cos(in_pose.pose.orientation.z);
+    out_pose.pose.position.x = out_pose.pose.position.x + offset_y * std::sin(in_pose.pose.orientation.z);
+    out_pose.pose.position.y = out_pose.pose.position.y - offset_y * std::cos(in_pose.pose.orientation.z);
 
     out_pose.header.frame_id = in_pose.header.frame_id;
 }
@@ -105,10 +107,13 @@ VecPoseStampPtr State::ComputeFollowPose()
     }
 
     auto follow_pose = std::make_shared<std::vector<PoseStamp> >();
+
+    follow_pose->push_back(head_path.back());
     
     // 计算跟随车的目标点，误差为0.3m
     float sum = 0.0;
     int robot_index = 1; // 跟随车索引
+    LOG_OUT_INFO(node->get_logger(), "ComputeFollowPose head_path size %d", head_path.size());
     for(int i = head_path.size() - 2; i >= 0; i--)
     {
         sum += std::hypot(head_path[i].pose.position.x - head_path[i + 1].pose.position.x, head_path[i].pose.position.y - head_path[i + 1].pose.position.y);
@@ -128,12 +133,13 @@ VecPoseStampPtr State::ComputeFollowPose()
     while(robot_index < robot_infos_.size())
     {
         PoseStamp out_pose;
-        computePoseByOffset(head_path.back(), out_pose, robot_infos_[robot_index].relative_pose.x - sum, robot_infos_[robot_index].relative_pose.y);
-        LOG_OUT_INFO(node->get_logger(), "ComputeFollowPose %d %f %s", robot_index, out_pose.pose.position.x, out_pose.header.frame_id.c_str());
+        computePoseByOffset(head_path[0], out_pose, robot_infos_[robot_index].relative_pose.x - sum, robot_infos_[robot_index].relative_pose.y);
+        LOG_OUT_INFO(node->get_logger(), "ComputeFollowPose %s out_pose_x:%f, head_path[0].pose.x:%f %s", 
+        robot_infos_[robot_index].robot_name.c_str(), out_pose.pose.position.x, head_path[0].pose.position.x, out_pose.header.frame_id.c_str());
         follow_pose->push_back(out_pose);
         robot_index++;
     }
-    last_follow_pose_ = follow_pose;
+    SetFollowPose(follow_pose);
     return follow_pose;
 }
 
@@ -172,6 +178,26 @@ bool State::GetTransform(const std::string& source_frame_id, const std::string& 
         return false;
     }
     return true;
+}
+
+bool State::FollowMovedEnd(PoseStamp& follow_pose, std::string robot_name) // 判断某个车是否到达目标点
+{
+    auto node = GetNodeSharePtr();
+    PoseStamp out_pose;
+    bool b_trans = TransformPose(follow_pose, out_pose, robot_name + "_base_link");
+    if(!b_trans){
+        LOG_OUT_ERROR(node->get_logger(), "FollowMovedEnd TransformPose failed!");
+        return false;
+    }
+
+    LOG_OUT_INFO(node->get_logger(), "FollowMovedEnd follow_pose_x:%f out_pose_x:%f", follow_pose.pose.position.x, out_pose.pose.position.x);
+
+    // 判断阈值
+    auto distance = std::hypot(out_pose.pose.position.x, out_pose.pose.position.y);
+    LOG_OUT_INFO(node->get_logger(), "FollowMovedEnd distance = %f", distance);
+    if(distance < path_pose_interval) return true;
+
+    return false;
 }
 
 } // namespace autofleet

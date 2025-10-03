@@ -37,7 +37,9 @@ namespace nav2_custom_follow_planner{
     const geometry_msgs::msg::PoseStamped & start,
     const geometry_msgs::msg::PoseStamped & goal) {
         nav_msgs::msg::Path path;
-        //
+        RCLCPP_INFO(node_->get_logger(), "起始点: %s %f %f ,目标点: %s %f %f",
+        start.header.frame_id.c_str(), start.pose.position.x, start.pose.position.y,
+        goal.header.frame_id.c_str(), goal.pose.position.x, goal.pose.position.y);
         path.header.stamp = node_->now();
         path.header.frame_id = global_frame_;
 

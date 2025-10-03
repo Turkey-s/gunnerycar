@@ -263,6 +263,9 @@ geometry_msgs::msg::TwistStamped RegulatedPurePursuitController::computeVelocity
   cmd_vel.header = pose.header;
   cmd_vel.twist.linear.x = linear_vel;
   cmd_vel.twist.angular.z = angular_vel;
+  RCLCPP_INFO(logger_, "局部路径规划：global_plan_ size %d, 目标点: %f, %f, 线速度: %f, 角速度: %f", 
+    global_plan_.poses.size(), carrot_pose.pose.position.x, carrot_pose.pose.position.y,
+    linear_vel, angular_vel);
   return cmd_vel;
 }
 

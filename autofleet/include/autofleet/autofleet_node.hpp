@@ -1,6 +1,8 @@
 #ifndef AUTOFLEET_NODE
 #define AUTOFLEET_NODE
 
+#include "autofleet/util.hpp"
+
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/pose.hpp"
 #include "tf2_ros/buffer.h"
@@ -21,23 +23,6 @@
 
 namespace autofleet
 {
-#define LOG_OUT(level, logger, format, ...) \
-    RCLCPP_##level(logger, "[%s:%d %s]" format, __FILE__, __LINE__, __func__, ##__VA_ARGS__)
-
-// 具体级别的便捷宏
-#define LOG_OUT_INFO(logger, ...)    LOG_OUT(INFO, logger,__VA_ARGS__)
-#define LOG_OUT_WARN(logger, ...)    LOG_OUT(WARN, logger,__VA_ARGS__)
-#define LOG_OUT_ERROR(logger, ...)   LOG_OUT(ERROR, logger,__VA_ARGS__)
-#define LOG_OUT_DEBUG(logger, ...)   LOG_OUT(DEBUG, logger,__VA_ARGS__)
-#define LOG_OUT_FATAL(logger, ...)   LOG_OUT(FATAL, logger,__VA_ARGS__)
-
-std::string thread_info()
-{
-    std::ostringstream thread_str;
-    thread_str << "Thread ID: " << std::this_thread::get_id();
-    return thread_str.str();
-}
-
 const float max_turn_angle = 0.72; // 最大转弯角度，弧度值
 const float path_pose_interval = 0.3;
 struct RobotInfo{

@@ -18,7 +18,7 @@ BT::NodeStatus FormTeamState::tick()
     return BT::NodeStatus::RUNNING;
   }
 
-  if(follow_path->size() != robot_infos_.size() - 1)
+  if(follow_path->size() != robot_infos_.size())
   {
     std::cout << "FormTeamState ComputeFollowPose failed!" << std::endl;
     return BT::NodeStatus::FAILURE;
@@ -34,19 +34,19 @@ BT::NodeStatus FormTeamState::tick()
 
     for(int index = 1; index < robot_infos_.size(); index++)
     {
-      if(!FollowCanMove(follow_path->at(index - 1), robot_infos_[index].robot_name)) return BT::NodeStatus::RUNNING;
+      if(!FollowCanMove(follow_path->at(index), robot_infos_[index].robot_name)) return BT::NodeStatus::RUNNING;
     }
 
     m_stage = STAGE_FOLLOW_MOVE;
     node->CancelGoal(robot_infos_[0].robot_name); // 让头车原地待命
-    node->SendGoal(robot_infos_[1].robot_name, follow_path->at(0));
+    node->SendGoal(robot_infos_[1].robot_name, follow_path->at(1));
     m_follow_moving_index = 1; // index = 1的车开始跟随
     LOG_OUT_INFO(node->get_logger(), "");
     return BT::NodeStatus::RUNNING;
 
     break;
   case STAGE_FOLLOW_MOVE:
-    if(FollowMovedEnd(follow_path->at(m_follow_moving_index - 1), robot_infos_[m_follow_moving_index].robot_name))
+    if(FollowMovedEnd(follow_path->at(m_follow_moving_index), robot_infos_[m_follow_moving_index].robot_name))
     {
       LOG_OUT_INFO(node->get_logger(), "%s followed end", robot_infos_[m_follow_moving_index].robot_name.c_str());
       node->CancelGoal(robot_infos_[m_follow_moving_index].robot_name);
@@ -54,10 +54,16 @@ BT::NodeStatus FormTeamState::tick()
       if(m_follow_moving_index == robot_infos_.size())
       {
         m_stage = STAGE_NONE;
+        auto result = setOutput("output_last_follow_poses_ptr", last_follow_poses_ptr_);
+        if(!result)
+        {
+          LOG_OUT_WARN(node->get_logger(), "setOutput failed! %s", result.error().c_str());
+        }
+        LOG_OUT_INFO(node->get_logger(), "formTeamState end %d", result.has_value());
         return BT::NodeStatus::SUCCESS;
       }
       //下一个编号的跟随车启动
-      node->SendGoal(robot_infos_[1].robot_name, follow_path->at(m_follow_moving_index - 1));
+      node->SendGoal(robot_infos_[1].robot_name, follow_path->at(m_follow_moving_index));
     }
     else
     {
@@ -91,19 +97,9 @@ bool FormTeamState::FollowCanMove(PoseStamp& follow_pose, std::string robot_name
   return true;
 }
 
-bool FormTeamState::FollowMovedEnd(PoseStamp& follow_pose, std::string robot_name) // 判断某个车是否到达目标点
+void FormTeamState::SetFollowPose(VecPoseStampPtr follow_poses_ptr)
 {
-  PoseStamp out_pose;
-  bool b_trans = TransformPose(follow_pose, out_pose, robot_name + "_base_link");
-  if(!b_trans){
-    std::cout << "FormTeamState TransformPose failed!" << std::endl;
-    return false;
-  }
-
-  // 判断阈值
-  if(std::hypot(out_pose.pose.position.x, out_pose.pose.position.y) < path_pose_interval) return true;
-
-  return false;
+  last_follow_poses_ptr_ = follow_poses_ptr;
 }
     
 } // namespace autofleet
