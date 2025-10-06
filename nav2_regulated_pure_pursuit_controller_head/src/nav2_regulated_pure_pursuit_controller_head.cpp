@@ -154,9 +154,15 @@ void RegulatedPurePursuitController::configure(
     use_cost_regulated_linear_velocity_scaling_ = false;
   }
 
+  cmd_vel_rate_ = 1.0;
+
   global_path_pub_ = node->create_publisher<nav_msgs::msg::Path>("received_global_plan", 1);
   carrot_pub_ = node->create_publisher<geometry_msgs::msg::PoseStamped>("lookahead_point", 1);
   carrot_arc_pub_ = node->create_publisher<nav_msgs::msg::Path>("lookahead_collision_arc", 1);
+  cmd_vel_rate_sub_ = node->create_subscription<std_msgs::msg::Float32>("vel_rate", 1, [this](const std_msgs::msg::Float32::SharedPtr msg) {
+    cmd_vel_rate_ = msg->data;
+    // RCLCPP_WARN(logger_, "速度比率 updated to %f", cmd_vel_rate_);
+  });
 }
 
 void RegulatedPurePursuitController::cleanup()
@@ -269,8 +275,9 @@ geometry_msgs::msg::TwistStamped RegulatedPurePursuitController::computeVelocity
   // populate and return message
   geometry_msgs::msg::TwistStamped cmd_vel;
   cmd_vel.header = pose.header;
-  cmd_vel.twist.linear.x = linear_vel;
-  cmd_vel.twist.angular.z = angular_vel;
+  cmd_vel.twist.linear.x = linear_vel * cmd_vel_rate_;
+  cmd_vel.twist.angular.z = angular_vel * cmd_vel_rate_;
+  // RCLCPP_WARN(logger_, "速度控制linear_vel: %f, angular_vel: %f", linear_vel, angular_vel);
   return cmd_vel;
 }
 
@@ -460,6 +467,7 @@ void RegulatedPurePursuitController::applyConstraints(
 
 void RegulatedPurePursuitController::setPlan(const nav_msgs::msg::Path & path)
 {
+  // RCLCPP_WARN(logger_, "局部控制 Received new global plan %d", path.poses.size());
   global_plan_ = path;
 }
 

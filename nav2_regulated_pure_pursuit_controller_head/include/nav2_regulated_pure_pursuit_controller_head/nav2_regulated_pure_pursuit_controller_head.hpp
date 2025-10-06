@@ -27,6 +27,7 @@
 #include "pluginlib/class_list_macros.hpp"
 #include "nav2_util/odometry_utils.hpp"
 #include "geometry_msgs/msg/pose2_d.hpp"
+#include "std_msgs/msg/float32.hpp"
 
 namespace nav2_regulated_pure_pursuit_controller_head
 {
@@ -237,11 +238,13 @@ protected:
   double max_angular_accel_;
   double rotate_to_heading_min_angle_;
   double goal_dist_tol_;
+  float cmd_vel_rate_;
 
   nav_msgs::msg::Path global_plan_;
   std::shared_ptr<rclcpp_lifecycle::LifecyclePublisher<nav_msgs::msg::Path>> global_path_pub_;
   std::shared_ptr<rclcpp_lifecycle::LifecyclePublisher<geometry_msgs::msg::PoseStamped>> carrot_pub_;
   std::shared_ptr<rclcpp_lifecycle::LifecyclePublisher<nav_msgs::msg::Path>> carrot_arc_pub_;
+  rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr cmd_vel_rate_sub_;
 };
 
 }  // namespace nav2_regulated_pure_pursuit_controller

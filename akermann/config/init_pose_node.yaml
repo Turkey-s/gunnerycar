@@ -1,14 +1,3 @@
-/robot1/init_pose_node:
-  ros__parameters:
-    init_pose:
-    - 2.0
-    - 0.0
-    - 0.0
-    - 0.0
-    - 0.0
-    - 0.0
-    use_sim_time: false
-
 /robot1/init_target_node:
   ros__parameters:
     init_target_pose:
@@ -18,15 +7,4 @@
     - 0.0
     - 0.0
     - 1.57
-    use_sim_time: false
-
-/robot2/init_pose_node:
-  ros__parameters:
-    init_pose:
-    - 0.0
-    - 0.0
-    - 0.1
-    - 0.0
-    - 0.0
-    - 0.0
     use_sim_time: false

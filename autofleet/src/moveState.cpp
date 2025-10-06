@@ -3,7 +3,7 @@
 
 namespace autofleet
 {
-const float max_tolerate_dist_error = 5.0;
+const float max_tolerate_dist_error = 10.0;
 
 //响应行为树tick
 BT::NodeStatus MoveState::tick()
@@ -99,7 +99,8 @@ bool MoveState::compute_controller_dist_error(int robot_index, float& dist_error
 
   if(TransformPose(last_follow_poses_ptr_->at(robot_index), out_pose, robot_infos_[robot_index].robot_name + "_base_link"))
   {
-    dist_error = std::hypot(out_pose.pose.position.x, out_pose.pose.position.y);
+    // 只需要计算x轴上的前向误差
+    dist_error = std::max(0.0, out_pose.pose.position.x);
     return true;
   }
   return false;

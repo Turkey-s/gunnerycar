@@ -83,7 +83,8 @@ private:
     std::unordered_map<std::string, rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr> lifecycle_mgr_clients_;
     std::unordered_map<std::string, GoalHandleNavigateToPose::SharedPtr> goal_handle_;
     rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr head_lookahead_sub_ = nullptr; // 订阅头车前视点
-    std::shared_ptr<rclcpp_action::Client<NavigateToPose>::SendGoalOptions> send_goal_options_;
+    std::unordered_map<std::string, std::shared_ptr<rclcpp_action::Client<NavigateToPose>::SendGoalOptions> > send_goal_options_;
+    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr follow_pose_pub_ = nullptr; // 发布跟随点
 
     rclcpp::CallbackGroup::SharedPtr timer_cb_group_; //定时器互斥回调组
     rclcpp::CallbackGroup::SharedPtr client_cb_group_; // 回调组

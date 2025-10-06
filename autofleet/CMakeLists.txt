@@ -35,6 +35,7 @@ set(dependencies
   nav_msgs
   std_msgs
   std_srvs
+  sensor_msgs
 )
 
 foreach(package IN LISTS dependencies)
@@ -74,6 +75,8 @@ add_executable(autofleet_node_exec src/main.cpp)
 
 add_executable(mainTest test/mainTest.cpp)
 
+add_executable(laser_filter_node src/laserScan_filter.cpp)
+
 target_link_libraries(autofleet_node_exec
   autofleet_node
 )
@@ -83,6 +86,10 @@ ament_target_dependencies(autofleet_node_exec
 )
 
 ament_target_dependencies(mainTest
+  ${dependencies}
+)
+
+ament_target_dependencies(laser_filter_node
   ${dependencies}
 )
 
@@ -101,6 +108,10 @@ install(TARGETS autofleet_node_exec
 )
 
 install(TARGETS mainTest
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(TARGETS laser_filter_node
   DESTINATION lib/${PROJECT_NAME}
 )
 

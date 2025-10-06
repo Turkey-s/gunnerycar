@@ -14,7 +14,7 @@ public:
     : State(xml_tag_name, conf){
         auto node = GetNodeSharePtr();
         if(node == nullptr) return;
-        head_vel_rate_pub = node->create_publisher<std_msgs::msg::Float32>(robot_infos_[0].robot_name + "/vel_rate", 10);
+        head_vel_rate_pub = node->create_publisher<std_msgs::msg::Float32>(robot_infos_[0].robot_name + "/vel_rate", 1);
     }
 
     virtual ~MoveState() = default;

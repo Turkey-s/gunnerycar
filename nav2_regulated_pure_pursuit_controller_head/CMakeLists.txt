@@ -11,6 +11,7 @@ find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(tf2 REQUIRED)
+find_package(std_msgs REQUIRED)
 
 nav2_package()
 
@@ -27,6 +28,7 @@ set(dependencies
   nav2_util
   nav2_core
   tf2
+  std_msgs
 )
 
 set(library_name nav2_regulated_pure_pursuit_controller_head)

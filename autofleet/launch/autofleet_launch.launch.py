@@ -4,7 +4,7 @@ import os
 from ament_index_python.packages import get_package_share_directory
 import launch_ros.parameter_descriptions
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.actions import GroupAction, DeclareLaunchArgument
+from launch.actions import GroupAction, DeclareLaunchArgument, TimerAction
 from launch_ros.actions import PushRosNamespace
 from launch.substitutions import LaunchConfiguration
 
@@ -18,7 +18,7 @@ def generate_launch_description():
 
     autofleet_config = launch.substitutions.LaunchConfiguration(
         'config', 
-        default = os.path.join(autofleet_pkg_path, 'config', 'autofleet_config.yaml')),
+        default = os.path.join(autofleet_pkg_path, 'config', 'autofleet_config.yaml'))
 
     action_autofleet_node = launch_ros.actions.Node(
         package='autofleet',
@@ -28,10 +28,16 @@ def generate_launch_description():
         parameters=[autofleet_config],
     )
 
+    # timeaction = TimerAction(
+    #     period=20.0,  # 延迟10秒
+    #     actions=[action_autofleet_node],
+    # )
+
 
     return launch.LaunchDescription([
         action_launch_robot,
         action_autofleet_node,
+        # timeaction,
     ])
 
     

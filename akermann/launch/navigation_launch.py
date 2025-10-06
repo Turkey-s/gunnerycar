@@ -123,7 +123,7 @@ def generate_launch_description():
             name='bt_navigator',
             output='screen',
             parameters=[configured_params],
-            arguments=['--ros-args', '--log-level', 'debug'],
+            arguments=['--ros-args', '--log-level', 'warn'],
             ),#remappings=remappings
 
         Node(
@@ -142,7 +142,7 @@ def generate_launch_description():
             parameters=[{'use_sim_time': use_sim_time},
                         {'autostart': autostart},
                         {'node_names': lifecycle_nodes}],
-            arguments=['--ros-args', '--log-level', 'debug'],),
+            arguments=['--ros-args', '--log-level', 'warn'],),
             
 
     ])

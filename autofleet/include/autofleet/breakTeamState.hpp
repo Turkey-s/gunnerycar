@@ -11,8 +11,7 @@ private:
     
 public:
     BreakTeamState(
-        const std::string& xml_tag_name, const BT::NodeConfiguration& conf) 
-        : State(xml_tag_name, conf){}
+        const std::string& xml_tag_name, const BT::NodeConfiguration& conf);
     virtual ~BreakTeamState() = default;
     
     static BT::PortsList providedPorts()
@@ -21,6 +20,10 @@ public:
     }
 
     virtual BT::NodeStatus tick() override;
+
+    int follow_index_ = 0;
+    std::vector<int> has_send_goal_;
+    VecPoseStampPtr follow_pose_;
 };
 
     

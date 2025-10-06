@@ -63,11 +63,12 @@ BT::NodeStatus FormTeamState::tick()
         return BT::NodeStatus::SUCCESS;
       }
       //下一个编号的跟随车启动
-      node->SendGoal(robot_infos_[1].robot_name, follow_path->at(m_follow_moving_index));
+      node->SendGoal(robot_infos_[m_follow_moving_index].robot_name, follow_path->at(m_follow_moving_index));
+      return BT::NodeStatus::RUNNING;
     }
     else
     {
-      LOG_OUT_INFO(node->get_logger(), "");
+      LOG_OUT_INFO(node->get_logger(), "%s is following", robot_infos_[m_follow_moving_index].robot_name.c_str());
       return BT::NodeStatus::RUNNING;
     }
     break;

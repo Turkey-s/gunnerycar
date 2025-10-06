@@ -8,6 +8,9 @@ namespace autofleet
 {
 using PoseStamp = geometry_msgs::msg::PoseStamped;
 using VecPoseStampPtr = std::shared_ptr<std::vector<PoseStamp> >;
+
+const float head_xy_goal_tolerance = 0.7;
+const float follow_xy_goal_tolerance = 0.5;
 class State : public BT::ActionNodeBase
 {
 public:
@@ -151,7 +154,7 @@ bool State::TransformPose(const PoseStamp& in_pose,
 
     auto tf_ = node->GetTfBuffer();
     try {
-        tf_->transform(in_pose, out_pose, target_frame_id, tf2::durationFromSec(0.2));
+        tf_->transform(in_pose, out_pose, target_frame_id, tf2::durationFromSec(0.5));
         out_pose.header.frame_id = target_frame_id;
         return true;
     } catch (tf2::TransformException & ex) {
@@ -184,18 +187,21 @@ bool State::FollowMovedEnd(PoseStamp& follow_pose, std::string robot_name) // �
 {
     auto node = GetNodeSharePtr();
     PoseStamp out_pose;
+    follow_pose.header.stamp = node->now();
     bool b_trans = TransformPose(follow_pose, out_pose, robot_name + "_base_link");
     if(!b_trans){
-        LOG_OUT_ERROR(node->get_logger(), "FollowMovedEnd TransformPose failed!");
+        LOG_OUT_ERROR(node->get_logger(), "%s FollowMovedEnd TransformPose failed!", robot_name.c_str());
         return false;
     }
 
-    LOG_OUT_INFO(node->get_logger(), "FollowMovedEnd follow_pose_x:%f out_pose_x:%f", follow_pose.pose.position.x, out_pose.pose.position.x);
+    // LOG_OUT_INFO(node->get_logger(), "%s follow_pose_x:%f out_pose_x:%f", robot_name.c_str(), follow_pose.pose.position.x, out_pose.pose.position.x);
 
     // 判断阈值
     auto distance = std::hypot(out_pose.pose.position.x, out_pose.pose.position.y);
-    LOG_OUT_INFO(node->get_logger(), "FollowMovedEnd distance = %f", distance);
-    if(distance < path_pose_interval) return true;
+    
+    float tolerance = robot_name == robot_infos_[0].robot_name ? head_xy_goal_tolerance : follow_xy_goal_tolerance;
+    // LOG_OUT_INFO(node->get_logger(), "FollowMovedEnd distance = %f, tolerance = %f", distance, tolerance);
+    if(distance < tolerance) return true;
 
     return false;
 }
