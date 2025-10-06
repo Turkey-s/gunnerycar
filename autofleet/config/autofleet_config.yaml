@@ -14,7 +14,7 @@
     robot2: [2.0, 0.0] #robot2在编队中的位置(x的值表示与头车的距离，且在头车的后方为正方向)
     robot3: [4.0, 0.0] #robot3在编队中的位置
 
-/laser_filter:
+/laser_filter_node:
   ros__parameters:
     use_sim_time: true
     robots_name: ["robot1", "robot2", "robot3"]

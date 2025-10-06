@@ -37,7 +37,7 @@ amcl:
     z_max: 0.05
     z_rand: 0.5
     z_short: 0.05
-    scan_topic: scan
+    scan_topic: filtered_scan
     set_initial_pose: true
     initial_pose:
       x: 2.0
@@ -167,9 +167,9 @@ local_costmap:
         z_voxels: 16
         max_obstacle_height: 2.0
         mark_threshold: 0
-        observation_sources: scan
+        observation_sources: filtered_scan
         scan:
-          topic: /robot2/scan
+          topic: /robot2/filtered_scan
           max_obstacle_height: 2.0
           clearing: True
           marking: True
@@ -201,9 +201,9 @@ global_costmap:
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
-        observation_sources: scan
+        observation_sources: filtered_scan
         scan:
-          topic: /robot2/scan
+          topic: /robot2/filtered_scan
           max_obstacle_height: 2.0
           clearing: True
           marking: True

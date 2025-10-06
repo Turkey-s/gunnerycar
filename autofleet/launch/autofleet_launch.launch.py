@@ -28,6 +28,14 @@ def generate_launch_description():
         parameters=[autofleet_config],
     )
 
+    action_laser_filter_node = launch_ros.actions.Node(
+        package='autofleet',
+        executable='laser_filter_node',
+        name='laser_filter_node',
+        output='screen', 
+        parameters=[autofleet_config],
+    )
+
     # timeaction = TimerAction(
     #     period=20.0,  # 延迟10秒
     #     actions=[action_autofleet_node],
@@ -37,6 +45,7 @@ def generate_launch_description():
     return launch.LaunchDescription([
         action_launch_robot,
         action_autofleet_node,
+        action_laser_filter_node,
         # timeaction,
     ])
 

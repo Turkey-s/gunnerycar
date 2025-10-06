@@ -48,27 +48,32 @@ private:
                 break;
             }
         }
+        double distance = 2.0;
+        double arc_radians = 0.2 / 2.0;
+        double front_angle_min = -arc_radians;
+        double front_angle_max = arc_radians;
         try{
             geometry_msgs::msg::TransformStamped transformStamped;
             transformStamped = tf_buffer_->lookupTransform(robot_name + "_base_link", front_robot_name + "_base_link", tf2::TimePointZero);
-            RCLCPP_INFO(this->get_logger(), "Transform from %s to %s is available, %f ,%f", robot_name.c_str(),front_robot_name.c_str(),transformStamped.transform.translation.x, transformStamped.transform.translation.y);
-            return;
+            // RCLCPP_INFO(this->get_logger(), "Transform from %s to %s is available, %f ,%f", robot_name.c_str(),front_robot_name.c_str(),transformStamped.transform.translation.x, transformStamped.transform.translation.y);
+            distance = std::sqrt(transformStamped.transform.translation.x * transformStamped.transform.translation.x + transformStamped.transform.translation.y * transformStamped.transform.translation.y);
+            arc_radians = 0.2 / distance;
+            front_angle_min = transformStamped.transform.rotation.z - arc_radians;
+            front_angle_max = transformStamped.transform.rotation.z + arc_radians;
         }catch(tf2::TransformException &ex){
             RCLCPP_WARN(this->get_logger(), "注意Could not transform %s to %s :...: %s", robot_name.c_str(), front_robot_name.c_str(), ex.what());
-            return;
         }
         
         auto filtered_scan = *scan;
-        
-        // 获取参数
-        double front_angle_min = this->get_parameter("front_angle_min").as_double();
-        double front_angle_max = this->get_parameter("front_angle_max").as_double();
         
         // 遍历所有激光点
         for(size_t i = 0; i < scan->ranges.size(); ++i) {
             // 计算当前点的角度
             double angle = scan->angle_min + i * scan->angle_increment;
-            
+            if(angle > M_PI) 
+            {
+                angle -= 2 * M_PI;
+            }
             // 如果角度在前方范围内，将该点设为无效值
             if(angle >= front_angle_min && angle <= front_angle_max) {
                 filtered_scan.ranges[i] = std::numeric_limits<float>::infinity();
