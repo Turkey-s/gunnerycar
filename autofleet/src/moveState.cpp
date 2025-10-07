@@ -10,7 +10,7 @@ BT::NodeStatus MoveState::tick()
 {
   auto node = GetNodeSharePtr();
   LOG_OUT_INFO(node->get_logger(), "MoveState tick");
-  if(is_first_tick)
+  if(is_first_tick_)
   {
     auto info = getInput<VecPoseStampPtr>("input_last_follow_poses_ptr");
     if (!info)
@@ -22,7 +22,7 @@ BT::NodeStatus MoveState::tick()
     last_follow_poses_ptr_ = info.value();
     LOG_OUT_INFO(node->get_logger(), "last_follow_poses size: %d", last_follow_poses_ptr_->size());
 
-    is_first_tick = false;
+    is_first_tick_ = false;
     node->SendGoal(robot_infos_[0].robot_name, *(node->GetTargetPose())); // 向头车发送目标点
   }
   else
@@ -70,7 +70,7 @@ void MoveState::compute_head_vel_rate(float dist_error)
   std_msgs::msg::Float32 head_vel_rate;
   head_vel_rate.data = std::max(1.0 - (dist_error / max_tolerate_dist_error), 0.0);
 
-  head_vel_rate_pub->publish(head_vel_rate);
+  head_vel_rate_pub_->publish(head_vel_rate);
 }
 
 float MoveState::compute_max_dist_error()

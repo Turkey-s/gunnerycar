@@ -12,7 +12,7 @@
                     <frameName>${robot_name}_laser_link</frameName>
                 </plugin>
                 <always_on>true</always_on>
-                <visualize>true</visualize>
+                <visualize>false</visualize>
                 <update_rate>30.0</update_rate>
                 <pose>0 0 0 0 0 0</pose>
                 <ray>

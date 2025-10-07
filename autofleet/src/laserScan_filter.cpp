@@ -25,7 +25,7 @@ public:
             if(robot_name == "robot1") continue;
             laser_sub_[robot_name] = this->create_subscription<sensor_msgs::msg::LaserScan>(
             robot_name + "/scan", 10, [this, robot_name](const sensor_msgs::msg::LaserScan::SharedPtr scan){
-                this->laserCallback(scan, robot_name);
+                this->laser_callback(scan, robot_name);
             }, options);
             filtered_scan_pub_[robot_name] = this->create_publisher<sensor_msgs::msg::LaserScan>(robot_name + "/filtered_scan", 10);
         }
@@ -37,7 +37,7 @@ public:
     }
 
 private:
-    void laserCallback(const sensor_msgs::msg::LaserScan::SharedPtr scan, const std::string robot_name) {
+    void laser_callback(const sensor_msgs::msg::LaserScan::SharedPtr scan, const std::string robot_name) {
         //检查tf变换
         std::string front_robot_name = "robot1";
         for(int i = 0; i < robots_name.size(); i++)

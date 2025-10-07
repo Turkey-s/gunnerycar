@@ -58,14 +58,13 @@ public:
     void Run();
 
 private:
-    void TargetPoseCallback(const geometry_msgs::msg::Pose::SharedPtr msg);
     void goal_responce_callback(std::string robot_name, std::shared_future<GoalHandleNavigateToPose::SharedPtr> future);
     void result_callback(std::string robot_name, const GoalHandleNavigateToPose::WrappedResult & result);
     void path_callback(const nav_msgs::msg::Path::SharedPtr msg);
     void lookahead_callback(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
     void tf_timer_callback();
 
-    void WriteFile();
+    void write_file();
 
 private:
     // 行为树相关

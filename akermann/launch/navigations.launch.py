@@ -42,7 +42,7 @@ def launch_setup(context, *args, **kwargs):
         }.items(),
     ))
 
-    if robot_name == 'robot3':
+    if robot_name == 'robot1':
         ret.append(launch_ros.actions.Node(
             package='rviz2',
             executable='rviz2',

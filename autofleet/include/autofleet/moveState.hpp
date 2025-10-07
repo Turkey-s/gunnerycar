@@ -14,7 +14,7 @@ public:
     : State(xml_tag_name, conf){
         auto node = GetNodeSharePtr();
         if(node == nullptr) return;
-        head_vel_rate_pub = node->create_publisher<std_msgs::msg::Float32>(robot_infos_[0].robot_name + "/vel_rate", 1);
+        head_vel_rate_pub_ = node->create_publisher<std_msgs::msg::Float32>(robot_infos_[0].robot_name + "/vel_rate", 1);
     }
 
     virtual ~MoveState() = default;
@@ -37,8 +37,8 @@ private:
     void send_follow_goal(); // 发送跟随目标
 
 private:
-    bool is_first_tick = true;
-    rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr head_vel_rate_pub = nullptr;
+    bool is_first_tick_ = true;
+    rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr head_vel_rate_pub_ = nullptr;
     VecPoseStampPtr last_follow_poses_ptr_ = nullptr;
 };
 

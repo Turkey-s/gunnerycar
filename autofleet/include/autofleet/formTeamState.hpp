@@ -19,8 +19,6 @@ public:
         : State(xml_tag_name, conf){}
     virtual ~FormTeamState() = default;
 
-    bool FollowCanMove(PoseStamp& follow_pose, std::string robot_name); // 判断某个车是否可以开始移动
-
     virtual void SetFollowPose(VecPoseStampPtr follow_poses_ptr) override; // 设置跟随车的目标位置
 
     static BT::PortsList providedPorts()
@@ -31,8 +29,11 @@ public:
     virtual BT::NodeStatus tick() override;
 
 private:
-    stage m_stage{STAGE_NONE}; // 车队状态
-    int m_follow_moving_index = 0; // 当前正在移动的跟随车索引(默认值是0，0是头车)
+    bool follow_can_move(PoseStamp& follow_pose, std::string robot_name); // 判断某个车是否可以开始移动
+
+private:
+    stage m_stage_{STAGE_NONE}; // 车队状态
+    int m_follow_moving_index_ = 0; // 当前正在移动的跟随车索引(默认值是0，0是头车)
     VecPoseStampPtr last_follow_poses_ptr_;
 };
 

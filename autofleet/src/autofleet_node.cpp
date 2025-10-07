@@ -71,7 +71,6 @@ AutofleetMgrNode::AutofleetMgrNode() : Node("autofleet_node")
       std::make_shared<rclcpp_action::Client<NavigateToPose>::SendGoalOptions>()));
       send_goal_options_[robot_name]->goal_response_callback = std::bind(&AutofleetMgrNode::goal_responce_callback, this, robot_name, std::placeholders::_1);
       send_goal_options_[robot_name]->result_callback = std::bind(&AutofleetMgrNode::result_callback, this, robot_name, std::placeholders::_1);
-        
   }
     
   // 初始化订阅者
@@ -181,7 +180,6 @@ void AutofleetMgrNode::result_callback(std::string robot_name, const GoalHandleN
     switch (result.code) {
         case rclcpp_action::ResultCode::SUCCEEDED:
             RCLCPP_INFO(this->get_logger(), "%s Goal succeeded", robot_name.c_str());
-            goal_handle_[robot_name] = nullptr;
             break;
         case rclcpp_action::ResultCode::ABORTED:
             RCLCPP_ERROR(this->get_logger(), "%s Goal was aborted", robot_name.c_str());
@@ -192,6 +190,7 @@ void AutofleetMgrNode::result_callback(std::string robot_name, const GoalHandleN
         default:
             RCLCPP_ERROR(this->get_logger(), "%s Unknown result code", robot_name.c_str());
     }
+    goal_handle_[robot_name] = nullptr;
 }
 
 void AutofleetMgrNode::lookahead_callback(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
@@ -283,16 +282,6 @@ void AutofleetMgrNode::tf_timer_callback(){
       LOG_OUT_WARN(get_logger(), "机器人 %s 的lifecycle管理服务端未激活", robot.robot_name.c_str());
       return;
     }
-
-    //检查tf变换
-    // try{
-    //   geometry_msgs::msg::TransformStamped transformStamped;
-    //   transformStamped = tf_buffer_->lookupTransform("map", robot.robot_name + "_base_link", tf2::TimePointZero);
-    //   robot.is_prepared = true;
-    // }catch(tf2::TransformException &ex){
-    //   RCLCPP_WARN(this->get_logger(), "注意Could not transform %s to %s :...: %s", "map", robot.robot_name.c_str(), ex.what());
-    //   return;
-    // }
   }
 
   LOG_OUT_INFO(get_logger(), "所有机器人已就位");
@@ -310,11 +299,11 @@ AutofleetMgrNode::~AutofleetMgrNode()
 {
   LOG_OUT_INFO(get_logger(), "注意AutofleetMgrNode::~AutofleetMgrNode()");
 #ifdef TESTING
-  WriteFile();
+  write_file();
 #endif
 }
 
-void AutofleetMgrNode::WriteFile()
+void AutofleetMgrNode::write_file()
 {
   std::ofstream outFile("/home/syl/gunnerycar_ws/src/autofleet/head_lookahead_path.txt");
 
