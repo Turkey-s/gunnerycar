@@ -1,5 +1,0 @@
-<library path = "nav2_custom_planner">
-    <class name = "nav2_custom_planner/CustomPlanner" type = "nav2_custom_planner::CustomPlanner" base_class_type = "nav2_core::GlobalPlanner">
-    <description> 自定义全局路径规划器 </description>
-    </class>
-</library>
