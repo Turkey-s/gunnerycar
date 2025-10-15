@@ -116,19 +116,19 @@ VecPoseStampPtr State::ComputeFollowPose()
     // 计算跟随车的目标点，误差为0.3m
     float sum = 0.0;
     int robot_index = 1; // 跟随车索引
-    LOG_OUT_INFO(node->get_logger(), "ComputeFollowPose head_path size %d", head_path.size());
     for(int i = head_path.size() - 2; i >= 0; i--)
     {
         sum += std::hypot(head_path[i].pose.position.x - head_path[i + 1].pose.position.x, head_path[i].pose.position.y - head_path[i + 1].pose.position.y);
         if(sum >= robot_infos_[robot_index].relative_pose.x)
         {
             follow_pose->push_back(head_path[i]);
+            LOG_OUT_INFO(node->get_logger(), "ComputeFollowPose follow_point id: %d ,pose (%f, %f)", robot_index,head_path[i].pose.position.x, head_path[i].pose.position.y);
             robot_index++;
         }
 
         if(robot_index == robot_infos_.size())
         {
-            head_path.assign(head_path.begin() + i, head_path.end());
+            // head_path.assign(head_path.begin() + i, head_path.end());
             break;
         }
     }
@@ -137,8 +137,9 @@ VecPoseStampPtr State::ComputeFollowPose()
     {
         PoseStamp out_pose;
         computePoseByOffset(head_path[0], out_pose, robot_infos_[robot_index].relative_pose.x - sum, robot_infos_[robot_index].relative_pose.y);
-        LOG_OUT_INFO(node->get_logger(), "ComputeFollowPose %s out_pose_x:%f, head_path[0].pose.x:%f %s", 
-        robot_infos_[robot_index].robot_name.c_str(), out_pose.pose.position.x, head_path[0].pose.position.x, out_pose.header.frame_id.c_str());
+        LOG_OUT_INFO(node->get_logger(), "ComputeFollowPose %s out_pose_x:(%f, %f), head_path[0].pose:(%f, %f,%f) %s", 
+        robot_infos_[robot_index].robot_name.c_str(), out_pose.pose.position.x,out_pose.pose.position.y, head_path[0].pose.position.x,head_path[0].pose.position.y, 
+        head_path[0].pose.orientation.z,out_pose.header.frame_id.c_str());
         follow_pose->push_back(out_pose);
         robot_index++;
     }

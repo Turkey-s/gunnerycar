@@ -1,117 +1,79 @@
 #include <chrono>
+#include <cinttypes>
+#include <cstdio>
 #include <memory>
-#include "autofleet/util.hpp"
+#include <string>
+#include <utility>
+
 #include "rclcpp/rclcpp.hpp"
-#include "std_srvs/srv/trigger.hpp"
-#include "rclcpp_action/rclcpp_action.hpp"
-#include "nav2_msgs/action/navigate_to_pose.hpp"
+#include "std_msgs/msg/int32.hpp"
 
 using namespace std::chrono_literals;
 
-namespace cb_group_demo
+// Node that produces messages.
+struct Producer : public rclcpp::Node
 {
-using NavigateToPose = nav2_msgs::action::NavigateToPose;
-using GoalHandleNavigateToPose = rclcpp_action::ClientGoalHandle<NavigateToPose>;
-class DemoNode : public rclcpp::Node
-{
-public:
-    DemoNode() : Node("client_node")
-    {
-        client_cb_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-        timer_cb_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-        client_ptr_ = this->create_client<std_srvs::srv::Trigger>("/robot1/lifecycle_manager_navigation/is_active", rmw_qos_profile_services_default,
-                                                                client_cb_group_);
-        timer_ptr_ = this->create_wall_timer(1s, std::bind(&DemoNode::timer_callback, this),
-                                            timer_cb_group_);
-        action_nav_to_goal_ = rclcpp_action::create_client<NavigateToPose>(this, "robot2/navigate_to_pose", client_cb_group_);
-        goals = {{0.43,-0.05, 0.0}, {0.776633, -0.034255, -0.011282}, 
-        {1.474498, -0.042129, -0.011282}, {1.852166, -0.046389, -0.011282},
-        {2.200964, -0.050325, -0.011282}, {2.776441, -0.060620, -0.055479},
-        {3.124068, -0.091033, -0.087265},{3.471695, -0.121446, -0.08985}, {10.819323, -0.151860, -0.08985}};
-    }
-
-    void SendGoal(geometry_msgs::msg::PoseStamped target_pose);
-    void goal_responce_callback(std::string robot_name, std::shared_future<GoalHandleNavigateToPose::SharedPtr> future);
-    void result_callback(std::string robot_name, const GoalHandleNavigateToPose::WrappedResult & result);
-
-private:
-    rclcpp::CallbackGroup::SharedPtr client_cb_group_;
-    rclcpp::CallbackGroup::SharedPtr timer_cb_group_;
-    rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr client_ptr_;
-    rclcpp::TimerBase::SharedPtr timer_ptr_;
-    rclcpp_action::Client<NavigateToPose>::SharedPtr action_nav_to_goal_;
-    std::vector<std::vector<float> > goals; // 目标点
-    int index = 0;
-
-    void timer_callback()
-    {
-        if(index >= goals.size()) {
-            return;
+  Producer(const std::string & name, const std::string & output)
+  : Node(name, rclcpp::NodeOptions().use_intra_process_comms(true))
+  {
+    // Create a publisher on the output topic.
+    pub_ = this->create_publisher<std_msgs::msg::Int32>(output, 10);
+    std::weak_ptr<std::remove_pointer<decltype(pub_.get())>::type> captured_pub = pub_;
+    // Create a timer which publishes on the output topic at ~1Hz.
+    auto callback = [captured_pub]() -> void {
+        auto pub_ptr = captured_pub.lock();
+        if (!pub_ptr) {
+          return;
         }
+        static int32_t count = 0;
+        std_msgs::msg::Int32::UniquePtr msg(new std_msgs::msg::Int32());
+        msg->data = count++;
+        printf(
+          "Published message with value: %d, and address: 0x%" PRIXPTR "\n", msg->data,
+          reinterpret_cast<std::uintptr_t>(msg.get()));
+        pub_ptr->publish(std::move(msg));
+      };
+    timer_ = this->create_wall_timer(1s, callback);
+  }
 
-        auto pose = geometry_msgs::msg::PoseStamped();
-        pose.pose.position.x = goals[index][0];
-        pose.pose.position.y = goals[index][1];
-        pose.pose.orientation.z = goals[index][2];
+  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr pub_;
+  rclcpp::TimerBase::SharedPtr timer_;
+};
 
-        SendGoal(pose);
-        index++;
-    }
-};  // class DemoNode
-
-void DemoNode::goal_responce_callback(std::string robot_name, std::shared_future<GoalHandleNavigateToPose::SharedPtr> future)
+// Node that consumes messages.
+struct Consumer : public rclcpp::Node
 {
-    auto goal_handle = future.get();
-    if (!goal_handle) {
-        RCLCPP_ERROR(this->get_logger(), "Goal was rejected by server %s", robot_name.c_str());
-    } else {
-        LOG_OUT_INFO(get_logger(), "Goal accepted by server, waiting for result");
-    }
-}
+  Consumer(const std::string & name, const std::string & input)
+  : Node(name, rclcpp::NodeOptions().use_intra_process_comms(true))
+  {
+    // Create a subscription on the input topic which prints on receipt of new messages.
+    sub_ = this->create_subscription<std_msgs::msg::Int32>(
+      input,
+      10,
+      [](std_msgs::msg::Int32::UniquePtr msg) {
+        printf(
+          " Received message with value: %d, and address: 0x%" PRIXPTR "\n", msg->data,
+          reinterpret_cast<std::uintptr_t>(msg.get()));
+      });
+  }
 
-void DemoNode::result_callback(std::string robot_name, const GoalHandleNavigateToPose::WrappedResult & result)
+  rclcpp::Subscription<std_msgs::msg::Int32>::SharedPtr sub_;
+};
+
+int main(int argc, char * argv[])
 {
-    switch (result.code) {
-        case rclcpp_action::ResultCode::SUCCEEDED:
-            break;
-        case rclcpp_action::ResultCode::ABORTED:
-            RCLCPP_ERROR(this->get_logger(), "%s Goal 被放弃", robot_name.c_str());
-            break;
-        case rclcpp_action::ResultCode::CANCELED:
-            RCLCPP_ERROR(this->get_logger(), "%s Goal was canceled", robot_name.c_str());
-            break;
-        default:
-            RCLCPP_ERROR(this->get_logger(), "%s Unknown result code", robot_name.c_str());
-    }
-}
+  setvbuf(stdout, NULL, _IONBF, BUFSIZ);
+  rclcpp::init(argc, argv);
+  rclcpp::executors::SingleThreadedExecutor executor;
 
-void DemoNode::SendGoal(geometry_msgs::msg::PoseStamped target_pose)
-{
-    auto goal_msg = NavigateToPose::Goal();
-    goal_msg.pose = target_pose;
-    goal_msg.pose.header.stamp = this->now();
-    
-    RCLCPP_INFO(get_logger(), "目标点参数：%f, %f, %f", target_pose.pose.position.x, target_pose.pose.position.y, target_pose.pose.orientation.z);
-    auto send_goal_options_ = std::make_shared<rclcpp_action::Client<NavigateToPose>::SendGoalOptions>();
-    send_goal_options_->goal_response_callback = std::bind(&DemoNode::goal_responce_callback, this,"robot2", std::placeholders::_1);
-    send_goal_options_->result_callback = std::bind(&DemoNode::result_callback, this,"robot2", std::placeholders::_1);
+  auto producer = std::make_shared<Producer>("producer", "number");
+  auto consumer = std::make_shared<Consumer>("consumer", "number");
 
-    action_nav_to_goal_->async_send_goal(goal_msg, *send_goal_options_);
-}
+  executor.add_node(producer);
+  executor.add_node(consumer);
+  executor.spin();
 
-}   // namespace cb_group_demo
+  rclcpp::shutdown();
 
-int main(int argc, char* argv[])
-{
-    rclcpp::init(argc, argv);
-    auto client_node = std::make_shared<cb_group_demo::DemoNode>();
-    rclcpp::executors::MultiThreadedExecutor executor;
-    executor.add_node(client_node);
-
-    RCLCPP_INFO(client_node->get_logger(), "Starting client node, shut down with CTRL-C");
-    executor.spin();
-    RCLCPP_INFO(client_node->get_logger(), "Keyboard interrupt, shutting down.\n");
-
-    rclcpp::shutdown();
-    return 0;
+  return 0;
 }

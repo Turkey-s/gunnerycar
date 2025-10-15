@@ -90,11 +90,15 @@ private:
 
     // Test
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_pub_;
+    rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr robot2_path_pub_;
+    rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr robot3_path_pub_;
     
     // 编队数据
     std::vector<RobotInfo> robots_info_; // 机器人信息
     std::string head_robot_name_; // 头车名称
     nav_msgs::msg::Path::SharedPtr head_lookhead_path_; // 头车前视路径
+    nav_msgs::msg::Path::SharedPtr robot2_path_; // robot2路径
+    nav_msgs::msg::Path::SharedPtr robot3_path_; // robot3路径
 };
 
 }

@@ -21,6 +21,10 @@ AutofleetMgrNode::AutofleetMgrNode() : Node("autofleet_node")
   // 初始化成员变量
   head_lookhead_path_ = std::make_shared<nav_msgs::msg::Path>();
   head_lookhead_path_->header.frame_id = "map";
+  robot2_path_ = std::make_shared<nav_msgs::msg::Path>();
+  robot2_path_->header.frame_id = "map";
+  robot3_path_ = std::make_shared<nav_msgs::msg::Path>();
+  robot3_path_->header.frame_id = "map";
 
   // 初始化回调组
   timer_cb_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -82,6 +86,8 @@ AutofleetMgrNode::AutofleetMgrNode() : Node("autofleet_node")
 
   //初始化发布者
   path_pub_ = create_publisher<nav_msgs::msg::Path>("head_path", 1);
+  robot2_path_pub_ = create_publisher<nav_msgs::msg::Path>("robot2_path", 1);
+  robot3_path_pub_ = create_publisher<nav_msgs::msg::Path>("robot3_path", 1);
   follow_pose_pub_ = create_publisher<geometry_msgs::msg::PoseStamped>("follow_pose", 1);
 }
 
@@ -135,7 +141,18 @@ void AutofleetMgrNode::CreateTree()
 
 void AutofleetMgrNode::SendGoal(std::string robot_name, geometry_msgs::msg::PoseStamped target_pose)
 {
-    follow_pose_pub_->publish(target_pose);
+    if(robot_name == "robot2")
+    {
+      robot2_path_->poses.push_back(target_pose);
+      robot2_path_pub_->publish(*robot2_path_);
+    }
+    else if(robot_name == "robot3")
+    {
+      robot3_path_->poses.push_back(target_pose);
+      robot3_path_pub_->publish(*robot3_path_);
+    }
+
+    // follow_pose_pub_->publish(target_pose);
 
     auto goal_msg = NavigateToPose::Goal();
     goal_msg.pose = target_pose;
@@ -224,7 +241,9 @@ void AutofleetMgrNode::lookahead_callback(const geometry_msgs::msg::PoseStamped:
   if(head_lookhead_path_->poses.size() > 0)
   {
     auto& last_pose = head_lookhead_path_->poses.back();
+    // 由于第一次计算朝向只用了两个点，因此朝向的值需要保守些，除以2比较合适
     last_pose.pose.orientation = tf2::toMsg(tf2::Quaternion(tf2::Vector3(0, 0, 1), atan2(out_pose.pose.position.y - last_pose.pose.position.y, out_pose.pose.position.x - last_pose.pose.position.x)));
+    last_pose.pose.orientation.z /= 2;
     if(head_lookhead_path_->poses.size() > 1)
     {
       auto& last_second_pose = head_lookhead_path_->poses[head_lookhead_path_->poses.size() - 2];
