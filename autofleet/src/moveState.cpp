@@ -96,7 +96,8 @@ float MoveState::compute_max_dist_error()
 bool MoveState::compute_controller_dist_error(int robot_index, float& dist_error)
 {
   PoseStamp out_pose;
-
+  auto node = GetNodeSharePtr();
+  last_follow_poses_ptr_->at(robot_index).header.stamp = node->now();
   if(TransformPose(last_follow_poses_ptr_->at(robot_index), out_pose, robot_infos_[robot_index].robot_name + "_base_link"))
   {
     // 只需要计算x轴上的前向误差

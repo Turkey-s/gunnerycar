@@ -24,7 +24,7 @@
 namespace autofleet
 {
 const float max_turn_angle = 0.72; // 最大转弯角度，弧度值
-const float path_pose_interval = 0.3;
+const float path_pose_interval = 0.1;
 struct RobotInfo{
     std::string robot_name;
     geometry_msgs::msg::Point relative_pose; // 在编队中的相对位置

@@ -20,6 +20,7 @@ BT::NodeStatus BreakTeamState::tick()
   while(follow_index_ < robot_infos_.size() && 
     FollowMovedEnd(follow_pose_->at(follow_index_), robot_infos_[follow_index_].robot_name))
   {
+    node->CancelGoal(robot_infos_[follow_index_].robot_name);
     follow_index_++;
   }
 
@@ -28,6 +29,7 @@ BT::NodeStatus BreakTeamState::tick()
     return BT::NodeStatus::SUCCESS;
   }
   
+  node->SendGoal(robot_infos_[follow_index_].robot_name, follow_pose_->at(follow_index_));
   // if(!has_send_goal_[follow_index_])
   // {
   //   LOG_OUT_INFO(node->get_logger(),"%s BreakTeamState send goal", robot_infos_[follow_index_].robot_name.c_str());

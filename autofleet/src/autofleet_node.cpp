@@ -152,6 +152,7 @@ void AutofleetMgrNode::SendGoal(std::string robot_name, geometry_msgs::msg::Pose
       robot3_path_pub_->publish(*robot3_path_);
     }
 
+    CancelGoal(robot_name);
     // follow_pose_pub_->publish(target_pose);
 
     auto goal_msg = NavigateToPose::Goal();

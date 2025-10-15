@@ -201,7 +201,7 @@ bool State::FollowMovedEnd(PoseStamp& follow_pose, std::string robot_name) // åˆ
     auto distance = std::hypot(out_pose.pose.position.x, out_pose.pose.position.y);
     
     float tolerance = robot_name == robot_infos_[0].robot_name ? head_xy_goal_tolerance : follow_xy_goal_tolerance;
-    // LOG_OUT_INFO(node->get_logger(), "FollowMovedEnd distance = %f, tolerance = %f", distance, tolerance);
+    LOG_OUT_INFO(node->get_logger(), "FollowMovedEnd distance = %f, tolerance = %f", distance, tolerance);
     if(distance < tolerance) return true;
 
     return false;
